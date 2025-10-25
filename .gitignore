@@ -1,6 +1,7 @@
 # -------------------------
 # DEPENDENCIES AND BUILD
 # -------------------------
+curvas-back/data.sqlite
 
 # Node dependencies
 curvas-back/node_modules

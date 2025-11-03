@@ -1,0 +1,58 @@
+# -------------------------
+# DEPENDENCIES AND BUILD
+# -------------------------
+curvas-back/data.sqlite
+
+# Node dependencies
+curvas-back/node_modules
+curvas-front/node_modules
+# Vite/npm built assets
+/dist
+
+# -------------------------
+# LOGS AND TEMP
+# -------------------------
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS and Editor specific files
+.DS_Store
+Thumbs.db
+
+# Temp files created by various tools
+.idea
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# -------------------------
+# CONFIG AND SECRETS
+# -------------------------
+
+# Environment variables (always ignore these!)
+.env
+.env.*
+!.env.production.local # If you need a local env for production testing,
+                      # but still keep the main .env files ignored.
+
+# Local history files
+.history
+
+# -------------------------
+# VITE/NPM specific
+# -------------------------
+
+# Vite build cache
+.vite
+
+# Coverage directory
+/coverage
+
+# VS Code directory (often contains user-specific config)
+.vscode

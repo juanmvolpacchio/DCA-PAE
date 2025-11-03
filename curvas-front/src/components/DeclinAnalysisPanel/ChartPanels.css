@@ -36,73 +36,94 @@ body {
   justify-content: space-evenly;
   align-items: center;
   width: 100%;
+  gap: 10px;
 }
-.chart-panel .param-panel {
-  width: 120px;
-  padding: 8px;
+
+.param-panel {
+  width: 100%;
+  max-width: 260px;
+  padding: 10px;
   background-color: white;
   border: 1px solid #aaa;
   border-radius: 6px;
+  box-sizing: border-box;
 }
-.chart-panel .param-panel h3 {
+
+.param-panel h3 {
   margin-bottom: 12px;
   font-family: "Ubuntu Mono", sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   color: rgb(114.756, 105.084, 203.416);
   text-align: center;
 }
-.chart-panel .param-panel .filter-container {
+
+.param-panel .filter-container {
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
+  justify-content: flex-start;
   align-items: center;
+  gap: 8px;
 }
-.chart-panel .param-panel .filter-container .filter-viewer {
+
+.param-panel .filter-container .filter-viewer {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  width: 80%;
-  margin-bottom: 5px;
-  padding: 2px 4px;
+  width: 100%;
+  padding: 4px 8px;
   box-sizing: border-box;
   background-color: rgb(168, 162, 223);
   border: 1px solid #aaa;
   border-radius: 4px;
   box-shadow: 1px 1px 1px #666;
 }
-.chart-panel .param-panel .filter-container .filter-viewer label {
+
+.param-panel .filter-container .filter-viewer label {
   font-family: "Cantarell", sans-serif;
-  font-size: 10px;
+  font-size: 11px;
+  flex-shrink: 0;
 }
-.chart-panel .param-panel .filter-container .filter-viewer input, .chart-panel .param-panel .filter-container .filter-viewer select {
-  width: 6ch;
-  padding: 2px;
+
+.param-panel .filter-container .filter-viewer input,
+.param-panel .filter-container .filter-viewer select {
+  width: 8ch;
+  padding: 3px;
   font-family: "Ubuntu Mono", sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   border: none;
   border-radius: 3px;
   box-shadow: 0 0 1px 1px #666;
 }
-.chart-panel .param-panel .filter-container .filter-viewer input:focus, .chart-panel .param-panel .filter-container .filter-viewer select:focus {
+
+.param-panel .filter-container .filter-viewer input:focus,
+.param-panel .filter-container .filter-viewer select:focus {
   outline: none;
   box-shadow: 0 0 1px 1px rgb(168, 162, 223);
 }
-.chart-panel .param-panel .filter-container .filter-viewer input.curve-editor-input {
-  width: 9ch;
+
+.param-panel .filter-container .filter-viewer input.curve-editor-input {
+  width: 10ch;
 }
-.chart-panel .chart-displayer {
+
+.chart-displayer {
   position: relative;
   display: flex;
   flex-direction: row;
-  justify-content: space-evenly;
+  justify-content: center;
   align-items: center;
-  padding: 6px 12px 10px 12px;
+  padding: 8px;
   background-color: #faf3e1;
   border: 1px solid #aaa;
   border-radius: 6px;
+  width: 100%;
+  height: auto;
+  max-height: calc(42vh - 38px);
+  box-sizing: border-box;
+  overflow: hidden;
 }
-.chart-panel .chart-displayer .log-check-label {
+
+.chart-displayer .log-check-label {
   position: absolute;
   bottom: 5px;
   right: 5px;
@@ -112,7 +133,8 @@ body {
   align-items: center;
   font-size: 0.6rem;
 }
-.chart-panel .chart-displayer .log-check-label input[type=checkbox] {
+
+.chart-displayer .log-check-label input[type=checkbox] {
   width: 11px;
   margin-right: 2px;
 }

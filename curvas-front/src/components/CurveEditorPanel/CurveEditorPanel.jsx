@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import CurveEditor from "./CurveEditor/CurveEditor";
 
 import { API_BASE, curveParams } from "../../helpers/constants";
 import { useAuth } from "../../hooks/useAuth";
@@ -14,13 +13,11 @@ export default function CurveEditorPanel({
   activeWell,
   onResetToSaved,
   savedCurve,
+  activeSegment,
+  setActiveSegment,
 }) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
-
-  const firstSegmentName = Object.keys(editableParams)[0];
-
-  const [activeSegment, setActiveSegment] = useState(firstSegmentName);
 
   const [comment, setComment] = useState("");
 
@@ -31,7 +28,7 @@ export default function CurveEditorPanel({
       console.log('🔄 Syncing activeSegment to:', currentFirstSegment);
       setActiveSegment(currentFirstSegment);
     }
-  }, [editableParams]);
+  }, [editableParams, activeSegment, setActiveSegment]);
 
   // Log current values for debugging
   console.log('📊 CurveEditorPanel - activeSegment:', activeSegment);
@@ -108,77 +105,69 @@ export default function CurveEditorPanel({
   }
 
   return (
-    <div id="curve-editor-container" className="chart-panel">
-      <div className="param-panel">
-        <h3>Curva Actual</h3>
-        <div className="filter-container">
-          {Object.entries(curveParams).map(([par, name]) => (
-            <div
-              key={par}
-              className="filter-viewer"
-              style={{
-                backgroundColor: editableParams[activeSegment]?.color || "#bbb",
-              }}
-            >
-              <label htmlFor={par}>{name}</label>
-              <input
-                id={par}
-                className="curve-editor-input"
-                type="number"
-                disabled={editableParams[activeSegment] ? false : true}
-                step={par === "dea" ? 0.001 : par === "t" ? 1 : 0.01}
-                value={editableParams[activeSegment]?.[par] || ""}
-                onChange={(e) =>
-                  updateEditableParam(activeSegment, par, e.target.value)
-                }
-              />
-            </div>
-          ))}
-          <div className="filter-viewer comment-input-viewer">
-            <label htmlFor="curve-comment">Comentario</label>
-            <textarea
-              id="curve-comment"
-              className="curve-comment-textarea"
-              rows="3"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Agregar comentario (opcional)..."
-              disabled={
-                !(user?.role === "admin" || user?.id === activeWell.owner)
+    <div id="curve-editor-params-panel" className="param-panel compact-panel">
+      <h3>Curva Actual</h3>
+      <div className="params-row">
+        {Object.entries(curveParams).map(([par, name]) => (
+          <div
+            key={par}
+            className="param-item"
+            style={{
+              backgroundColor: editableParams[activeSegment]?.color || "#bbb",
+            }}
+          >
+            <label htmlFor={par}>{name}</label>
+            <input
+              id={par}
+              className="curve-editor-input"
+              type="number"
+              disabled={editableParams[activeSegment] ? false : true}
+              step={par === "dea" ? 0.001 : par === "t" ? 1 : 0.01}
+              value={editableParams[activeSegment]?.[par] || ""}
+              onChange={(e) =>
+                updateEditableParam(activeSegment, par, e.target.value)
               }
             />
           </div>
-          <div className="filter-viewer button-group">
-            <button
-              className="reset-button"
-              disabled={
-                !(user?.role === "admin" || user?.id === activeWell.owner) ||
-                !savedCurve
-              }
-              onClick={handleReset}
-              title="Restablecer a curva guardada"
-            >
-              🔄 Restablecer
-            </button>
-            <button
-              className="save-button"
-              disabled={
-                !(user?.role === "admin" || user?.id === activeWell.owner)
-              }
-              onClick={handleCurveSaving}
-              title="Guardar curva"
-            >
-              💾 Guardar
-            </button>
-          </div>
-        </div>
+        ))}
       </div>
-      <CurveEditor
-        editableParams={editableParams}
-        setActiveSegment={setActiveSegment}
-        wellProdSeries={wellProdSeries}
-        savedCurve={savedCurve}
-      />
+      <div className="comment-input-section">
+        <label htmlFor="curve-comment">Comentario</label>
+        <textarea
+          id="curve-comment"
+          className="curve-comment-textarea"
+          rows="2"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="Agregar comentario..."
+          disabled={
+            !(user?.role === "admin" || user?.id === activeWell.owner)
+          }
+        />
+      </div>
+      <div className="button-group">
+        <button
+          className="reset-button"
+          disabled={
+            !(user?.role === "admin" || user?.id === activeWell.owner) ||
+            !savedCurve
+          }
+          onClick={handleReset}
+          title="Restablecer a curva guardada"
+        >
+          🔄 Restablecer
+        </button>
+        <button
+          className="save-button"
+          disabled={
+            !(user?.role === "admin" || user?.id === activeWell.owner)
+          }
+          onClick={handleCurveSaving}
+          title="Guardar curva"
+        >
+          💾 Guardar
+        </button>
+      </div>
     </div>
   );
 }

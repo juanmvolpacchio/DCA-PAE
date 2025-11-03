@@ -10,6 +10,7 @@ import { useWell } from "../../hooks/useWell";
 import CurveEditorPanel from "../CurveEditorPanel/CurveEditorPanel";
 import SavedCurvePanel from "../SavedCurvePanel/SavedCurvePanel";
 import PeakChartPanel from "../PeakChartPanel/PeakChartPanel";
+import CurveEditor from "../CurveEditorPanel/CurveEditor/CurveEditor";
 
 import { API_BASE } from "../../helpers/constants";
 
@@ -110,6 +111,11 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
   const [chartRerenderer, setChartRerender] = useState("init");
   useEffect(() => setChartRerender(well), [well]);
 
+  // Get activeSegment state to pass to CurveEditor
+  const [activeSegment, setActiveSegment] = useState(
+    Object.keys(editableParams)[0]
+  );
+
   if (wellSavedCurves === undefined) {
     return "Loading...";
   }
@@ -117,28 +123,42 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
   return (
     <>
       <div id="main-chart-panel">
-        <PeakChartPanel
-          series={{
-            oil: wellProdSeries.efec_oil_prod,
-            gas: wellProdSeries.efec_gas_prod,
-            water: wellProdSeries.efec_water_prod,
-            months: wellProdSeries.month,
-          }}
-          points={points}
-          applyPeakFilter={applyPeakFilter}
-          addNewPoint={addNewPoint}
-        />
-        <div id="curve-panels-container">
-          <SavedCurvePanel savedCurve={savedCurve} />
-          <CurveEditorPanel
-            wellProdSeries={wellProdSeries}
-            editableParams={editableParams}
-            updateEditableParam={updateEditableParam}
-            removeEditableParam={removeEditableParam}
-            activeWell={activeWell}
-            onResetToSaved={handleResetToSaved}
-            savedCurve={savedCurve}
+        <div id="top-row">
+          <PeakChartPanel
+            series={{
+              oil: wellProdSeries.efec_oil_prod,
+              gas: wellProdSeries.efec_gas_prod,
+              water: wellProdSeries.efec_water_prod,
+              months: wellProdSeries.month,
+            }}
+            points={points}
+            applyPeakFilter={applyPeakFilter}
+            addNewPoint={addNewPoint}
           />
+        </div>
+        <div id="bottom-row">
+          <div id="left-column">
+            <SavedCurvePanel savedCurve={savedCurve} />
+            <CurveEditorPanel
+              wellProdSeries={wellProdSeries}
+              editableParams={editableParams}
+              updateEditableParam={updateEditableParam}
+              removeEditableParam={removeEditableParam}
+              activeWell={activeWell}
+              onResetToSaved={handleResetToSaved}
+              savedCurve={savedCurve}
+              activeSegment={activeSegment}
+              setActiveSegment={setActiveSegment}
+            />
+          </div>
+          <div id="right-column">
+            <CurveEditor
+              editableParams={editableParams}
+              setActiveSegment={setActiveSegment}
+              wellProdSeries={wellProdSeries}
+              savedCurve={savedCurve}
+            />
+          </div>
         </div>
       </div>
     </>

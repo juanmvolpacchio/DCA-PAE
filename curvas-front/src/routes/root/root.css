@@ -62,4 +62,5 @@ header h1 {
   align-items: center;
   width: calc(100% - 140px);
   height: 100%;
+  padding-top: 20px;
 }

@@ -64,20 +64,29 @@ export default function CurveEditor({
 
   const [zoomRanges, setZoomRanges] = useState(initialRanges);
 
-  const [windowSize, setWindowSize] = useState({
-    x: window.innerWidth,
-    y: window.innerHeight,
+  const [containerSize, setContainerSize] = useState({
+    width: 600,
+    height: 400,
   });
 
+  const containerRef = useRef(null);
   const plotRef = useRef(null);
 
   useEffect(() => {
     function updateSize() {
-      setWindowSize({
-        x: window.innerWidth,
-        y: window.innerHeight,
-      });
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        // Match production chart height: 42vh - 38px, minus padding
+        const maxHeight = window.innerHeight * 0.42 - 38 - 20;
+        setContainerSize({
+          width: Math.max(rect.width - 20, 300), // Account for padding, min 300px
+          height: Math.min(Math.max(rect.height - 20, 200), maxHeight), // Limit to production chart height
+        });
+      }
     }
+
+    // Initial sizing with a small delay to ensure DOM is ready
+    setTimeout(updateSize, 100);
 
     window.addEventListener("resize", updateSize);
 
@@ -206,32 +215,34 @@ export default function CurveEditor({
     .flat();
 
   return (
-    <div className="chart-displayer">
+    <div className="chart-displayer" ref={containerRef}>
       <Plot
         ref={plotRef}
         data={[...savedCurveData, ...editableCurvesData]}
         layout={{
           plot_bgcolor: "#eee",
           paper_bgcolor: "#faf3e1",
-          width: windowSize.x * 0.82 - (140 + 220 + 100), // Resta $main-left-padding, $main-right-padding y width de .param-panel
-          height: windowSize.y * 0.42 - 38, //Resta $height-header
+          width: containerSize.width,
+          height: containerSize.height,
           margin: {
-            l: 30,
-            r: 10,
-            b: 30,
-            t: 25,
+            l: 40,
+            r: 20,
+            b: 50,
+            t: 30,
             pad: 2,
           },
           legend: {
             title: "Curvas",
-            font: { size: 8 },
+            font: { size: 9 },
             orientation: "v",
+            x: 1.02,
+            y: 1,
           },
           xaxis: getLayoutXAxis(wellProdSeries, editableParams, zoomRanges),
           yaxis: {
             title: "Oil [m3]",
-            titlefont: { size: 9 },
-            tickfont: { size: 7 },
+            titlefont: { size: 10 },
+            tickfont: { size: 8 },
             range: logScale ? "sarasa" : zoomRanges.y,
             type: logScale ? "log" : "linear",
           },
@@ -259,6 +270,7 @@ export default function CurveEditor({
         }}
         config={{
           displaylogo: false,
+          responsive: true,
           modeBarButtonsToRemove: [
             "zoom2d",
             "zoomIn2d",

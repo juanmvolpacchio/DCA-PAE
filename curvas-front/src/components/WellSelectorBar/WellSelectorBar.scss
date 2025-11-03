@@ -1,0 +1,115 @@
+@import '../../globals.scss';
+
+
+aside {
+    width: $main-left-padding;
+    height: 100%;
+
+    border-right: $light-border;
+
+    #well-link-container {
+        @include flex-cont($direc: column, $justif: start);
+        height: 60%;
+
+        input[type=text] {
+            width: 90%;
+            margin: 10px auto;
+            padding: 3px 5px;
+            box-sizing: border-box;
+
+            font-family: 'Ubuntu Mono';
+            border: $dark-border;
+            border-radius: 4px;
+
+            &:focus {
+                outline: none;
+                border: 2px solid $primary-dark-color;
+            }
+        }
+
+        #well-link-list {
+            @include flex-cont($direc: column, $justif: start);
+            width: 90%;
+            height: 800px;
+            overflow-x: hidden;
+            overflow-y: auto;
+
+            background-color: white;
+            border: $dark-border;
+            border-radius: 5px;
+
+            a {
+                width: 100%;
+                padding: 3px 5px;
+
+                font-family: 'Cantarell', sans-serif;
+                font-size: 10px;
+                text-align: center;
+                text-decoration: none;
+                color: darken($primary_dark_color, 30);
+
+                background-color: $light-details;
+                border-bottom: $light-border;
+
+                transition: all .1s;
+                // animation: 1s fadeIn;
+
+                &.owned {
+                    background-color: rgb(250, 202, 113);
+                }
+
+                &:hover {
+                    background-color: $gral-bg;
+                }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; } 
+                }
+            }
+        }
+    }
+
+    label {
+        @include flex-cont($justif: start);
+        margin-top: 30px;
+
+        cursor: pointer;
+        
+        font-size: 12px;
+
+        input {
+            margin: 0 6px;
+        }
+    }
+
+    #unit-filter {
+        @include flex-cont($justif: space-evenly);
+        height: 14%;
+
+        h3 {
+            width: 40%;
+            
+            font-family: 'Cantarell', sans-serif;
+            font-size: .8rem;
+            text-align: center;
+        }
+
+        select {
+            width: 40%;
+            padding: 3px 5px;
+            box-sizing: border-box;
+            
+            font-family: 'Ubuntu Mono';
+            border: $dark-border;
+            border-radius: 4px;
+            
+            appearance: none;
+
+            &:focus {
+                outline: none;
+                border: 2px solid $primary-dark-color;
+            }
+        }
+    }
+}

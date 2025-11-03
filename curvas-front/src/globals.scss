@@ -1,0 +1,69 @@
+
+$primary-dark-color: rgb(168, 162, 223);
+$primary-light-color: #f2eaff;
+$black: #666;
+$light-details: #fff2cb;
+$gral-bg: #e3e6eb;
+
+$paper_color: #faf3e1;
+
+@mixin flex-cont( $direc: row, $justif: space-evenly, $align: center ) {
+    display: flex;
+    flex-direction: $direc;
+    justify-content: $justif;
+    align-items: $align;
+}
+
+
+$light-border: 1px solid #aaa;
+$dark-border: 2px solid #888;
+
+@mixin input-border {
+    border: 2px solid darken($primary-dark-color, 10);
+    border-radius: 6px;
+}
+
+
+$height-header: 38px;
+$main-left-padding: 140px;
+$main-right-padding: 250px;
+
+
+* {
+    margin: 0;
+    padding: 0;
+    font-family: 'Raleway', sans-serif;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+        background-color: #ddd;
+        border-radius: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: darken($primary-dark-color, 0);
+        border-radius: 6px;
+    }
+}
+
+html {
+    font-family: 'Ubuntu Mono', monospace;
+    // font-size: min(2vw, 22px);
+}
+
+body {
+    user-select: none;
+    height: 100vh;
+    overflow-y: hidden;
+
+    background: $gral-bg;
+}
+
+#root {
+    height: 100%;
+    margin: 0 auto;
+}
+
+
+// Fonts
+@import url('https://fonts.googleapis.com/css2?family=Cantarell:ital,wght@0,400;0,700;1,400;1,700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');

@@ -1,0 +1,135 @@
+@import url("https://fonts.googleapis.com/css2?family=Cantarell:ital,wght@0,400;0,700;1,400;1,700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+* {
+  margin: 0;
+  padding: 0;
+  font-family: "Raleway", sans-serif;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  background-color: #ddd;
+  border-radius: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #a8a2df;
+  border-radius: 6px;
+}
+
+html {
+  font-family: "Ubuntu Mono", monospace;
+}
+
+body {
+  user-select: none;
+  height: 100vh;
+  overflow-y: hidden;
+  background: #e3e6eb;
+}
+
+#root {
+  height: 100%;
+  margin: 0 auto;
+}
+
+aside {
+  width: 140px;
+  height: 100%;
+  border-right: 1px solid #aaa;
+}
+aside #well-link-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+  height: 60%;
+}
+aside #well-link-container input[type="text"] {
+  width: 90%;
+  margin: 10px auto;
+  padding: 3px 5px;
+  box-sizing: border-box;
+  font-family: "Ubuntu Mono";
+  border: 2px solid #888;
+  border-radius: 4px;
+}
+aside #well-link-container input[type="text"]:focus {
+  outline: none;
+  border: 2px solid rgb(168, 162, 223);
+}
+aside #well-link-container #well-link-list {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+  width: 90%;
+  height: 800px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background-color: white;
+  border: 2px solid #888;
+  border-radius: 5px;
+}
+aside #well-link-container #well-link-list a {
+  width: 100%;
+  padding: 3px 5px;
+  font-family: "Cantarell", sans-serif;
+  font-size: 10px;
+  text-align: center;
+  text-decoration: none;
+  color: rgb(70.528, 59.392, 172.608);
+  background-color: #fff2cb;
+  border-bottom: 1px solid #aaa;
+  transition: all 0.1s;
+}
+aside #well-link-container #well-link-list a.owned {
+  background-color: rgb(250, 202, 113);
+}
+aside #well-link-container #well-link-list a:hover {
+  background-color: #e3e6eb;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+aside label {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  align-items: center;
+  margin-top: 30px;
+  cursor: pointer;
+  font-size: 12px;
+}
+aside label input {
+  margin: 0 6px;
+}
+aside #unit-filter {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+aside #unit-filter h3 {
+  width: 40%;
+  font-family: "Cantarell", sans-serif;
+  font-size: 0.8rem;
+  text-align: center;
+}
+aside #unit-filter select {
+  width: 40%;
+  padding: 3px 5px;
+  box-sizing: border-box;
+  font-family: "Ubuntu Mono";
+  border: 2px solid #888;
+  border-radius: 4px;
+  appearance: none;
+}
+aside #unit-filter select:focus {
+  outline: none;
+  border: 2px solid rgb(168, 162, 223);
+}

@@ -1,0 +1,31 @@
+@import url("https://fonts.googleapis.com/css2?family=Cantarell:ital,wght@0,400;0,700;1,400;1,700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+* {
+  margin: 0;
+  padding: 0;
+  font-family: "Raleway", sans-serif;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  background-color: #ddd;
+  border-radius: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #a8a2df;
+  border-radius: 6px;
+}
+
+html {
+  font-family: "Ubuntu Mono", monospace;
+}
+
+body {
+  user-select: none;
+  height: 100vh;
+  overflow-y: hidden;
+  background: #e3e6eb;
+}
+
+#root {
+  height: 100%;
+  margin: 0 auto;
+}

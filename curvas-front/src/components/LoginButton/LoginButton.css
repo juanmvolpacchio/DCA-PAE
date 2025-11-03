@@ -1,0 +1,106 @@
+@import url("https://fonts.googleapis.com/css2?family=Cantarell:ital,wght@0,400;0,700;1,400;1,700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+* {
+  margin: 0;
+  padding: 0;
+  font-family: "Raleway", sans-serif;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  background-color: #ddd;
+  border-radius: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #a8a2df;
+  border-radius: 6px;
+}
+
+html {
+  font-family: "Ubuntu Mono", monospace;
+}
+
+body {
+  user-select: none;
+  height: 100vh;
+  overflow-y: hidden;
+  background: #e3e6eb;
+}
+
+#root {
+  height: 100%;
+  margin: 0 auto;
+}
+
+#login-button-container {
+  position: relative;
+}
+#login-button-container button {
+  width: 120px;
+  height: 26px;
+  margin-right: 20px;
+  cursor: pointer;
+  font-family: "Ubuntu Mono", sans-serif;
+  font-size: 14px;
+  overflow-x: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background-color: rgb(168, 162, 223);
+  border: 2px solid #888;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+#login-button-container button:hover {
+  background-color: rgb(203.496, 199.944, 236.056);
+}
+#login-button-container #login-form, #login-button-container #profile-displayer {
+  position: absolute;
+  top: 36px;
+  right: 10px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  width: 180px;
+  padding: 4px 0;
+  background-color: #fff2cb;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+}
+#login-button-container #login-form {
+  height: 80px;
+}
+#login-button-container #login-form input {
+  width: 70%;
+  padding: 3px 5px;
+  box-sizing: border-box;
+  font-family: "Ubuntu Mono";
+  border: 2px solid #888;
+  border-radius: 4px;
+}
+#login-button-container #login-form input:focus {
+  outline: none;
+  border: 2px solid rgb(168, 162, 223);
+}
+#login-button-container #profile-displayer {
+  height: 120px;
+}
+#login-button-container #profile-displayer p {
+  width: 70%;
+  padding: 3px 5px;
+  box-sizing: border-box;
+  font-family: "Cantarell", sans-serif;
+  font-size: 12px;
+  background-color: rgb(168, 162, 223);
+  border: 2px solid #888;
+  border-radius: 4px;
+}
+#login-button-container #profile-displayer button {
+  margin: 0 auto;
+  width: 80px;
+  cursor: pointer;
+  font-size: 10px;
+  background-color: white;
+}
+#login-button-container #profile-displayer button:hover {
+  background-color: #ddd;
+}

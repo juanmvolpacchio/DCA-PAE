@@ -1,0 +1,72 @@
+@import url("https://fonts.googleapis.com/css2?family=Cantarell:ital,wght@0,400;0,700;1,400;1,700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+* {
+  margin: 0;
+  padding: 0;
+  font-family: "Raleway", sans-serif;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  background-color: #ddd;
+  border-radius: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #a8a2df;
+  border-radius: 6px;
+}
+
+html {
+  font-family: "Ubuntu Mono", monospace;
+}
+
+body {
+  user-select: none;
+  height: 100vh;
+  overflow-y: hidden;
+  background: #e3e6eb;
+}
+
+#root {
+  height: 100%;
+  margin: 0 auto;
+}
+
+#main-chart-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  width: calc(100% - 250px);
+  height: 100%;
+  border-right: 1px solid #aaa;
+}
+
+#unresp-chart-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  width: 250px;
+  height: 100%;
+  background-color: rgb(210.5952, 207.5328, 238.6672);
+}
+#unresp-chart-panel .unresp-chart-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+}
+#unresp-chart-panel .unresp-chart-container h3 {
+  padding: 6px 0;
+  font-family: "Ubuntu Mono", sans-serif;
+  font-size: 12px;
+}
+#unresp-chart-panel .unresp-chart-container .unresp-chart-displayer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  padding: 12px;
+  background-color: white;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+}

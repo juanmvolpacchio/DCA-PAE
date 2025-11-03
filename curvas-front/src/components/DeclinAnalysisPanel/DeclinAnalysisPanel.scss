@@ -1,0 +1,41 @@
+@import '../../globals.scss';
+
+
+#main-chart-panel{
+    @include flex-cont($direc: column);
+    width: calc(100% - $main-right-padding);
+    height: 100%;
+
+    border-right: $light-border;
+}
+
+#unresp-chart-panel {
+    @include flex-cont($direc: column);
+    width: $main-right-padding;
+    height: 100%;
+    
+    background-color: lighten($primary-dark-color, 12);
+
+    .unresp-chart-container {
+        @include flex-cont($direc: column);
+
+        
+        h3 {
+            padding: 6px 0;
+            font-family: 'Ubuntu Mono', sans-serif;
+            font-size: 12px;
+
+        }
+        
+        .unresp-chart-displayer {
+            @include flex-cont;
+            padding: 12px;
+    
+            background-color: white;
+            border: $light-border;
+            border-radius: 6px;
+    
+        }
+    }
+
+}

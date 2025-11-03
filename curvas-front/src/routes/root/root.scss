@@ -1,0 +1,31 @@
+@import '../../globals.scss';
+
+
+header {
+    @include flex-cont;
+
+    height: $height-header;
+
+    border-top: $light-border;
+    border-bottom: $light-border;
+
+    h1 {
+        margin-left: $main-left-padding + 60px;
+        flex-grow: 1;
+        font-family: 'Cantarell', sans-serif;
+        font-weight: bold;
+        font-size: 18px;
+        text-align: left;
+    }
+}
+
+#main-container {
+    @include flex-cont;
+    height: calc( 100% - $height-header );
+
+    #main-panel-container {
+        @include flex-cont;
+        width: calc(100% - $main-left-padding);
+        height: 100%;
+    }
+}

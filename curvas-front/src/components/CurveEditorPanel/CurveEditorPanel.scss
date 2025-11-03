@@ -1,0 +1,33 @@
+
+@import '../../globals.scss';
+
+
+#save_curve_viewer {
+    width: 96%;
+    margin: 8px 0;
+    padding: 4px;
+    
+    select {
+        width: 72%;
+
+        appearance: none;
+    }
+
+    button {
+        @include flex-cont();
+        width: 10%;
+        background-color: transparent;
+        border: none;
+
+        cursor: pointer;
+
+        span {
+            font-size: 16px;
+        }
+    }
+
+    button:disabled {
+        cursor: default;
+    }
+
+}

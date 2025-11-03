@@ -1,0 +1,65 @@
+@import url("https://fonts.googleapis.com/css2?family=Cantarell:ital,wght@0,400;0,700;1,400;1,700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+* {
+  margin: 0;
+  padding: 0;
+  font-family: "Raleway", sans-serif;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  background-color: #ddd;
+  border-radius: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #a8a2df;
+  border-radius: 6px;
+}
+
+html {
+  font-family: "Ubuntu Mono", monospace;
+}
+
+body {
+  user-select: none;
+  height: 100vh;
+  overflow-y: hidden;
+  background: #e3e6eb;
+}
+
+#root {
+  height: 100%;
+  margin: 0 auto;
+}
+
+header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  height: 38px;
+  border-top: 1px solid #aaa;
+  border-bottom: 1px solid #aaa;
+}
+header h1 {
+  margin-left: 200px;
+  flex-grow: 1;
+  font-family: "Cantarell", sans-serif;
+  font-weight: bold;
+  font-size: 18px;
+  text-align: left;
+}
+
+#main-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  height: calc(100% - 38px);
+}
+#main-container #main-panel-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  width: calc(100% - 140px);
+  height: 100%;
+}

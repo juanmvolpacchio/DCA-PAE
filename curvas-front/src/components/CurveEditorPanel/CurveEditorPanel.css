@@ -1,0 +1,57 @@
+@import url("https://fonts.googleapis.com/css2?family=Cantarell:ital,wght@0,400;0,700;1,400;1,700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+* {
+  margin: 0;
+  padding: 0;
+  font-family: "Raleway", sans-serif;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  background-color: #ddd;
+  border-radius: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #a8a2df;
+  border-radius: 6px;
+}
+
+html {
+  font-family: "Ubuntu Mono", monospace;
+}
+
+body {
+  user-select: none;
+  height: 100vh;
+  overflow-y: hidden;
+  background: #e3e6eb;
+}
+
+#root {
+  height: 100%;
+  margin: 0 auto;
+}
+
+#save_curve_viewer {
+  width: 96%;
+  margin: 8px 0;
+  padding: 4px;
+}
+#save_curve_viewer select {
+  width: 72%;
+  appearance: none;
+}
+#save_curve_viewer button {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  width: 10%;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+#save_curve_viewer button span {
+  font-size: 16px;
+}
+#save_curve_viewer button:disabled {
+  cursor: default;
+}

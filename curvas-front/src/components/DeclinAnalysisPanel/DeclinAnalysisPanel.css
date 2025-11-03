@@ -40,6 +40,16 @@ body {
   border-right: 1px solid #aaa;
 }
 
+#curve-panels-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  width: 100%;
+  padding: 0 20px;
+}
+
 #unresp-chart-panel {
   display: flex;
   flex-direction: column;

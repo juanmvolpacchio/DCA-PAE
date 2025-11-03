@@ -1,10 +1,10 @@
 // Express handler: POST /curves
-// Expects body: { name, qo, dea, t, well, user_id }
+// Expects body: { name, qo, dea, t, well, user_id, comment (optional) }
 const { run } = require("../../db");
 
 module.exports = async function saveCurveHandler(req, res, next) {
   try {
-    const { name, qo, dea, t, well, user_id } = req.body || {};
+    const { name, qo, dea, t, well, user_id, comment } = req.body || {};
 
     if (
       !name ||
@@ -20,8 +20,10 @@ module.exports = async function saveCurveHandler(req, res, next) {
     }
 
     const result = await run(
-      `INSERT INTO saved_curve VALUES(?, ?, ?, ?, ?, ?, ?) 
-            ON CONFLICT(id) DO UPDATE SET name = ?, qo = ?, dea = ?, t = ?, well = ?, user_id = ?;`,
+      `INSERT INTO saved_curve (id, name, qo, dea, t, well, user_id, comment, created_at)
+       VALUES(?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+       ON CONFLICT(id) DO UPDATE SET
+         name = ?, qo = ?, dea = ?, t = ?, well = ?, user_id = ?, comment = ?, created_at = datetime('now');`,
       [
         name + well,
         name,
@@ -30,12 +32,14 @@ module.exports = async function saveCurveHandler(req, res, next) {
         t,
         well,
         user_id,
+        comment || null,
         name,
         qo,
         dea,
         t,
         well,
         user_id,
+        comment || null,
       ]
     );
 
@@ -49,6 +53,7 @@ module.exports = async function saveCurveHandler(req, res, next) {
         dea: Number(dea),
         t: Number(t),
         user_id: Number(user_id),
+        comment: comment || null,
       },
     });
   } catch (err) {

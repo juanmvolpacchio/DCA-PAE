@@ -20,8 +20,12 @@ export default function usePointsSegmentsAndParams(series) {
 
   const [segments, setSegments] = useState(initialSegments);
 
+  // Initialize with only the first segment (Seg. 1)
+  const initialNormalizedSegments = getNormalizedSegments(initialSegments);
   const [editableParams, setEditableParams] = useState(
-    getNormalizedSegments(initialSegments)
+    initialNormalizedSegments["Seg. 1"]
+      ? { "Seg. 1": initialNormalizedSegments["Seg. 1"] }
+      : initialNormalizedSegments
   );
 
   function applyPeakFilter(params) {
@@ -29,30 +33,77 @@ export default function usePointsSegmentsAndParams(series) {
     const newSegments = getSeriesSegmentation(series, newPoints);
     setPoints(newPoints);
     setSegments(newSegments);
-    setEditableParams(getNormalizedSegments(newSegments));
+
+    // Update only the first segment (Seg. 1) with new calculated values
+    const normalizedSegments = getNormalizedSegments(newSegments);
+    if (normalizedSegments["Seg. 1"]) {
+      setEditableParams({
+        "Seg. 1": normalizedSegments["Seg. 1"]
+      });
+    }
   }
 
   function addNewPoint(typePoint, indexPoint) {
-    const newPoints = points.with(
-      indexPoint,
-      points[indexPoint] === undefined ? typePoint : undefined
-    );
+    // Clear all previous points and set only the new one
+    const newPoints = series.map((_, i) => {
+      if (i === indexPoint) {
+        return typePoint;
+      }
+      return undefined;
+    });
+
     const newSegments = getSeriesSegmentation(series, newPoints);
 
     setPoints(newPoints);
     setSegments(newSegments);
-    setEditableParams(getNormalizedSegments(newSegments));
+
+    // Update only the first segment (Seg. 1) with new calculated values
+    const normalizedSegments = getNormalizedSegments(newSegments);
+    if (normalizedSegments["Seg. 1"]) {
+      setEditableParams({
+        "Seg. 1": normalizedSegments["Seg. 1"]
+      });
+    }
   }
 
   function updateEditableParam(curveName, par, value) {
-    if (Object.keys(editableParams).find((name) => name === curveName))
-      setEditableParams({
+    if (Object.keys(editableParams).find((name) => name === curveName)) {
+      const updated = {
         ...editableParams,
         [curveName]: {
           ...editableParams[curveName],
           [par]: Number(value),
         },
-      });
+      };
+      console.log(`✓ Updated ${par}:`, Number(value));
+      setEditableParams(updated);
+    } else {
+      console.warn('⚠️ Curve name not found:', curveName);
+    }
+  }
+
+  function updateMultipleParams(curveName, updates) {
+    if (Object.keys(editableParams).find((name) => name === curveName)) {
+      const updated = {
+        ...editableParams,
+        [curveName]: {
+          ...editableParams[curveName],
+          ...Object.fromEntries(
+            Object.entries(updates).map(([key, value]) => [key, Number(value)])
+          ),
+        },
+      };
+      console.log('✓ Updated multiple params:', updates);
+      setEditableParams(updated);
+    } else {
+      console.warn('⚠️ Curve name not found:', curveName);
+    }
+  }
+
+  function clearAllPoints() {
+    console.log('🗑️ Clearing all selected points');
+    const clearedPoints = series.map(() => undefined);
+    setPoints(clearedPoints);
   }
 
   function addEditableParam(curveName, seg, qo, dea, t, color, realMaxQo) {
@@ -85,5 +136,7 @@ export default function usePointsSegmentsAndParams(series) {
     addEditableParam,
     removeEditableParam,
     toggleEditableParam,
+    updateMultipleParams,
+    clearAllPoints,
   ];
 }

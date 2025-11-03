@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CurveEditor from "./CurveEditor/CurveEditor";
 
-import { API_BASE, curveParams, savedCurveTags } from "../../helpers/constants";
+import { API_BASE, curveParams } from "../../helpers/constants";
 import { useAuth } from "../../hooks/useAuth";
 import "./CurveEditorPanel.css";
 
@@ -12,6 +12,8 @@ export default function CurveEditorPanel({
   updateEditableParam,
   removeEditableParam,
   activeWell,
+  onResetToSaved,
+  savedCurve,
 }) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -20,14 +22,27 @@ export default function CurveEditorPanel({
 
   const [activeSegment, setActiveSegment] = useState(firstSegmentName);
 
-  const [toSaveCurve, setToSaveCurve] = useState("reservas");
+  const [comment, setComment] = useState("");
+
+  // Sync activeSegment when editableParams keys change
+  useEffect(() => {
+    const currentFirstSegment = Object.keys(editableParams)[0];
+    if (currentFirstSegment && currentFirstSegment !== activeSegment) {
+      console.log('🔄 Syncing activeSegment to:', currentFirstSegment);
+      setActiveSegment(currentFirstSegment);
+    }
+  }, [editableParams]);
+
+  // Log current values for debugging
+  console.log('📊 CurveEditorPanel - activeSegment:', activeSegment);
+  console.log('📊 CurveEditorPanel - editableParams:', editableParams);
 
   const saveCurveMutation = useMutation({
-    mutationFn: async ({ name, qo, dea, t, well, user_id }) => {
+    mutationFn: async ({ name, qo, dea, t, well, user_id, comment }) => {
       const response = await fetch(`${API_BASE}/curves`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, qo, dea, t, well, user_id }),
+        body: JSON.stringify({ name, qo, dea, t, well, user_id, comment }),
       });
       if (!response.ok) throw new Error("Failed to save curve");
       return response.json();
@@ -36,6 +51,7 @@ export default function CurveEditorPanel({
       queryClient.invalidateQueries({
         queryKey: ["well", activeWell.name, "curves"],
       });
+      setComment(""); // Clear comment after successful save
     },
   });
 
@@ -64,12 +80,13 @@ export default function CurveEditorPanel({
     if (user?.role === "admin" || user?.id === activeWell.owner) {
       const { qo, dea, t } = editableParams[activeSegment];
       saveCurveMutation.mutate({
-        name: toSaveCurve,
+        name: activeSegment,
         qo,
         dea,
         t,
         well: activeWell.name,
         user_id: user.id,
+        comment: comment.trim() || null,
       });
     }
   }
@@ -77,16 +94,23 @@ export default function CurveEditorPanel({
   async function handleCurveDeleting() {
     if (user?.role === "admin" || user?.id === activeWell.owner) {
       deleteCurveMutation.mutate({
-        name: toSaveCurve,
+        name: activeSegment,
         well: activeWell.name,
       });
+    }
+  }
+
+  function handleReset() {
+    if (onResetToSaved) {
+      onResetToSaved();
+      // Don't reset comment - it should always start empty
     }
   }
 
   return (
     <div id="curve-editor-container" className="chart-panel">
       <div className="param-panel">
-        <h3>Parámetros curvas</h3>
+        <h3>Curva Actual</h3>
         <div className="filter-container">
           {Object.entries(curveParams).map(([par, name]) => (
             <div
@@ -110,33 +134,41 @@ export default function CurveEditorPanel({
               />
             </div>
           ))}
-          <div className="filter-viewer" id="save_curve_viewer">
-            <select
-              disabled={user?.role !== "admin" && user?.id !== activeWell.owner}
-              value={toSaveCurve}
-              onChange={(e) => setToSaveCurve(e.target.value)}
-            >
-              {Object.entries(savedCurveTags).map(([tag, name]) => (
-                <option key={tag} value={tag}>
-                  {name}
-                </option>
-              ))}
-            </select>
+          <div className="filter-viewer comment-input-viewer">
+            <label htmlFor="curve-comment">Comentario</label>
+            <textarea
+              id="curve-comment"
+              className="curve-comment-textarea"
+              rows="3"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Agregar comentario (opcional)..."
+              disabled={
+                !(user?.role === "admin" || user?.id === activeWell.owner)
+              }
+            />
+          </div>
+          <div className="filter-viewer button-group">
             <button
+              className="reset-button"
+              disabled={
+                !(user?.role === "admin" || user?.id === activeWell.owner) ||
+                !savedCurve
+              }
+              onClick={handleReset}
+              title="Restablecer a curva guardada"
+            >
+              🔄 Restablecer
+            </button>
+            <button
+              className="save-button"
               disabled={
                 !(user?.role === "admin" || user?.id === activeWell.owner)
               }
               onClick={handleCurveSaving}
+              title="Guardar curva"
             >
-              💾
-            </button>
-            <button
-              disabled={
-                !(user?.role === "admin" || user?.id === activeWell.owner)
-              }
-              onClick={handleCurveDeleting}
-            >
-              ❌
+              💾 Guardar
             </button>
           </div>
         </div>
@@ -145,6 +177,7 @@ export default function CurveEditorPanel({
         editableParams={editableParams}
         setActiveSegment={setActiveSegment}
         wellProdSeries={wellProdSeries}
+        savedCurve={savedCurve}
       />
     </div>
   );

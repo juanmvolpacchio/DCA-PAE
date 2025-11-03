@@ -7,7 +7,7 @@ module.exports = async function getWellSavedCurvesHandler(req, res, next) {
     if (!well) return res.status(400).json({ error: "well is required" });
 
     const rows = await all(
-      "SELECT sc.*, u.username FROM saved_curve AS sc LEFT JOIN user AS u ON sc.user_id = u.id WHERE well = ?;",
+      "SELECT sc.*, u.username FROM saved_curve AS sc LEFT JOIN user AS u ON sc.user_id = u.id WHERE well = ? ORDER BY sc.created_at DESC;",
       [well]
     );
 

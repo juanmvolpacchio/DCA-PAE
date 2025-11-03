@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 
 import "./ChartPanels.css";
@@ -8,13 +8,10 @@ import "./DeclinAnalysisPanel.css";
 import usePointsSegmentsAndParams from "../../hooks/usePointsSegmentsAndParams";
 import { useWell } from "../../hooks/useWell";
 import CurveEditorPanel from "../CurveEditorPanel/CurveEditorPanel";
-import FittedCurveChart from "../FittedCurveChart/FittedCurveChart";
+import SavedCurvePanel from "../SavedCurvePanel/SavedCurvePanel";
 import PeakChartPanel from "../PeakChartPanel/PeakChartPanel";
-import SegmentChart from "../SegmentChart/SegmentChart";
 
 import { API_BASE } from "../../helpers/constants";
-import { getNormalizedSegments } from "../../helpers/segmentHelpers";
-import SavedCurveChart from "../SavedCurveChart/SavedCurveChart";
 
 export default function DeclinAnalysisPanel({ wellProdSeries }) {
   const { well } = useParams();
@@ -43,7 +40,61 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
     addEditableParam,
     removeEditableParam,
     toggleEditableParam,
+    updateMultipleParams,
+    clearAllPoints,
   ] = usePointsSegmentsAndParams(wellProdSeries.efec_oil_prod);
+
+  // Track the most recent saved curve
+  const [savedCurve, setSavedCurve] = useState(null);
+  const initializedRef = useRef(false);
+
+  // Initialize editableParams with saved curve when available
+  useEffect(() => {
+    if (wellSavedCurves && wellSavedCurves.length > 0) {
+      const mostRecentCurve = wellSavedCurves[0];
+      setSavedCurve(mostRecentCurve);
+
+      // Initialize editable params with saved curve values only once per well
+      const firstSegmentName = Object.keys(editableParams)[0];
+      if (firstSegmentName && mostRecentCurve && !initializedRef.current) {
+        console.log('🔧 Initializing curve params from saved curve:', mostRecentCurve);
+
+        // Update all three parameters at once
+        updateMultipleParams(firstSegmentName, {
+          qo: mostRecentCurve.qo,
+          dea: mostRecentCurve.dea,
+          t: mostRecentCurve.t
+        });
+
+        initializedRef.current = true;
+      }
+    }
+  }, [wellSavedCurves]);
+
+  // Reset initialization flag when well changes
+  useEffect(() => {
+    initializedRef.current = false;
+  }, [well]);
+
+  // Function to reset editable params to saved curve
+  function handleResetToSaved() {
+    if (savedCurve) {
+      const firstSegmentName = Object.keys(editableParams)[0];
+      if (firstSegmentName) {
+        console.log('🔄 Resetting to saved curve:', savedCurve);
+
+        // Clear all selected points from production chart
+        clearAllPoints();
+
+        // Reset parameters to saved curve values
+        updateMultipleParams(firstSegmentName, {
+          qo: savedCurve.qo,
+          dea: savedCurve.dea,
+          t: savedCurve.t
+        });
+      }
+    }
+  }
 
   /*
    * Fue necesario implementar este mecanismo de rerenderización forzada,
@@ -77,22 +128,19 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
           applyPeakFilter={applyPeakFilter}
           addNewPoint={addNewPoint}
         />
-        <CurveEditorPanel
-          wellProdSeries={wellProdSeries}
-          editableParams={editableParams}
-          updateEditableParam={updateEditableParam}
-          removeEditableParam={removeEditableParam}
-          activeWell={activeWell}
-        />
+        <div id="curve-panels-container">
+          <SavedCurvePanel savedCurve={savedCurve} />
+          <CurveEditorPanel
+            wellProdSeries={wellProdSeries}
+            editableParams={editableParams}
+            updateEditableParam={updateEditableParam}
+            removeEditableParam={removeEditableParam}
+            activeWell={activeWell}
+            onResetToSaved={handleResetToSaved}
+            savedCurve={savedCurve}
+          />
+        </div>
       </div>
-      {/* <div id="unresp-chart-panel">
-        <SegmentChart segments={segments} />
-        <FittedCurveChart segments={getNormalizedSegments(segments)} />
-        <SavedCurveChart
-          savedCurves={wellSavedCurves}
-          toggleEditableParam={toggleEditableParam}
-        />
-      </div> */}
     </>
   );
 }

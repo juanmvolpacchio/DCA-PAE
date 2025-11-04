@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Outlet, useNavigate, useParams } from "react-router-dom";
+import { Container, Navbar, Form } from "react-bootstrap";
 import { API_BASE } from "../../helpers/constants";
 import { useAuth } from "../../hooks/useAuth";
 import { useWell } from "../../hooks/useWell";
@@ -76,60 +77,62 @@ export default function MainScreen() {
 
   return (
     <>
-      <header>
-        {/* <img src={ logo } alt="logo"/> */}
-        <div className="header-selectors">
-          <select
-            value={managUnit}
-            onChange={(e) => {
-              setManagUnit(e.target.value);
-              setProject("");
-              setSelectedWell("");
-            }}
-          >
-            <option value="">Todas las unidades</option>
-            {managUnits.map((unit) => (
-              <option key={unit} value={unit}>
-                {unit}
-              </option>
-            ))}
-          </select>
+      <Navbar bg="light" className="border-bottom px-3 py-2">
+        <Container fluid>
+          {/* <Navbar.Brand><img src={ logo } alt="logo"/></Navbar.Brand> */}
+          <div className="d-flex gap-3 flex-grow-1 align-items-center">
+            <Form.Select
+              value={managUnit}
+              onChange={(e) => {
+                setManagUnit(e.target.value);
+                setProject("");
+                setSelectedWell("");
+              }}
+              style={{ maxWidth: '250px' }}
+            >
+              <option value="">Todas las unidades</option>
+              {managUnits.map((unit) => (
+                <option key={unit} value={unit}>
+                  {unit}
+                </option>
+              ))}
+            </Form.Select>
 
-          <select
-            value={project}
-            onChange={(e) => {
-              setProject(e.target.value);
-              setSelectedWell("");
-            }}
-          >
-            <option value="">Todos los proyectos</option>
-            {projects.map((proj) => (
-              <option key={proj} value={proj}>
-                {proj}
-              </option>
-            ))}
-          </select>
+            <Form.Select
+              value={project}
+              onChange={(e) => {
+                setProject(e.target.value);
+                setSelectedWell("");
+              }}
+              style={{ maxWidth: '250px' }}
+            >
+              <option value="">Todos los proyectos</option>
+              {projects.map((proj) => (
+                <option key={proj} value={proj}>
+                  {proj}
+                </option>
+              ))}
+            </Form.Select>
 
-          <select value={selectedWell} onChange={handleWellChange}>
-            <option value="">Seleccione un pozo</option>
-            {filteredWells.map((w) => (
-              <option key={w.name} value={w.name}>
-                {w.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <LoginButton />
-        {/* <span
-                    className="material-symbols-rounded"
-                    onClick={ window.winHandlers.exit }
-                >close_small</span> */}
-      </header>
-      <div id="main-container">
-        <div id="main-panel-container">
-          <Outlet context={{ user, activeWell }} />
-        </div>
-      </div>
+            <Form.Select
+              value={selectedWell}
+              onChange={handleWellChange}
+              style={{ maxWidth: '250px' }}
+            >
+              <option value="">Seleccione un pozo</option>
+              {filteredWells.map((w) => (
+                <option key={w.name} value={w.name}>
+                  {w.name}
+                </option>
+              ))}
+            </Form.Select>
+          </div>
+          <LoginButton />
+        </Container>
+      </Navbar>
+      <Container fluid className="h-100 p-0">
+        <Outlet context={{ user, activeWell }} />
+      </Container>
     </>
   );
 }

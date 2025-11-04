@@ -3,6 +3,9 @@ import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 
+// Import Bootstrap CSS
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 import MainScreen from "./routes/root/root";
 
 import WellScreen from "./routes/well/well";

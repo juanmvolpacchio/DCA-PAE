@@ -32,6 +32,9 @@ body {
 
 #curve-editor-params-panel {
   flex-shrink: 0;
+  width: 100%;
+  flex-grow: 1;
+  overflow-y: auto;
 }
 
 .comment-input-section {

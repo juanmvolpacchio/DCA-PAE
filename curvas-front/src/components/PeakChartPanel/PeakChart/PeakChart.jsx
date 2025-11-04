@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import Plot from "react-plotly.js";
 
@@ -49,18 +49,26 @@ export default function PeakChart({ series, points, addNewPoint }) {
 
   const [zoomRanges, setZoomRanges] = useState(initialRanges);
 
-  const [windowSize, setWindowSize] = useState({
-    x: window.innerWidth,
-    y: window.innerHeight,
+  const [containerSize, setContainerSize] = useState({
+    width: 600,
+    height: 400,
   });
+
+  const containerRef = useRef(null);
 
   useEffect(() => {
     function updateSize() {
-      setWindowSize({
-        x: window.innerWidth,
-        y: window.innerHeight,
-      });
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setContainerSize({
+          width: Math.max(rect.width - 20, 300), // Account for padding, min 300px
+          height: Math.max(rect.height - 20, 200), // Account for padding, min 200px
+        });
+      }
     }
+
+    // Initial sizing with a small delay to ensure DOM is ready
+    setTimeout(updateSize, 100);
 
     window.addEventListener("resize", updateSize);
 
@@ -69,7 +77,7 @@ export default function PeakChart({ series, points, addNewPoint }) {
 
   const xaxis = getLayoutXAxis(series, zoomRanges);
   return (
-    <div className="chart-displayer">
+    <div className="chart-displayer" ref={containerRef}>
       <Plot
         data={[
           {
@@ -175,8 +183,8 @@ export default function PeakChart({ series, points, addNewPoint }) {
         layout={{
           plot_bgcolor: "#eee",
           paper_bgcolor: "#faf3e1",
-          width: windowSize.x * 0.82 - (140 + 220 + 100), // Resta $main-left-padding, $main-right-padding y width de .param-panel
-          height: windowSize.y * 0.42 - 38, //Resta $height-header
+          width: containerSize.width,
+          height: containerSize.height,
           margin: {
             l: 30,
             r: 10,

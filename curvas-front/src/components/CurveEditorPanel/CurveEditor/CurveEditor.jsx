@@ -76,11 +76,9 @@ export default function CurveEditor({
     function updateSize() {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        // Match production chart height: 42vh - 38px, minus padding
-        const maxHeight = window.innerHeight * 0.42 - 38 - 20;
         setContainerSize({
           width: Math.max(rect.width - 20, 300), // Account for padding, min 300px
-          height: Math.min(Math.max(rect.height - 20, 200), maxHeight), // Limit to production chart height
+          height: Math.max(rect.height - 20, 200), // Account for padding, min 200px
         });
       }
     }

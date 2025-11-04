@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
+import { Container, Row, Col } from "react-bootstrap";
 
 import "./ChartPanels.css";
 import "./DeclinAnalysisPanel.css";
@@ -121,37 +122,40 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
   }
 
   return (
-    <>
-      <div id="main-chart-panel">
-        <div id="top-row">
-          <PeakChartPanel
-            series={{
-              oil: wellProdSeries.efec_oil_prod,
-              gas: wellProdSeries.efec_gas_prod,
-              water: wellProdSeries.efec_water_prod,
-              months: wellProdSeries.month,
-            }}
-            points={points}
-            applyPeakFilter={applyPeakFilter}
-            addNewPoint={addNewPoint}
+    <Container fluid className="h-100 py-3">
+      <Row className="h-100 g-3">
+        {/* Columna izquierda: Curva guardada y Curva actual */}
+        <Col xs={3} className="d-flex flex-column gap-3">
+          <SavedCurvePanel savedCurve={savedCurve} />
+          <CurveEditorPanel
+            wellProdSeries={wellProdSeries}
+            editableParams={editableParams}
+            updateEditableParam={updateEditableParam}
+            removeEditableParam={removeEditableParam}
+            activeWell={activeWell}
+            onResetToSaved={handleResetToSaved}
+            savedCurve={savedCurve}
+            activeSegment={activeSegment}
+            setActiveSegment={setActiveSegment}
           />
-        </div>
-        <div id="bottom-row">
-          <div id="left-column">
-            <SavedCurvePanel savedCurve={savedCurve} />
-            <CurveEditorPanel
-              wellProdSeries={wellProdSeries}
-              editableParams={editableParams}
-              updateEditableParam={updateEditableParam}
-              removeEditableParam={removeEditableParam}
-              activeWell={activeWell}
-              onResetToSaved={handleResetToSaved}
-              savedCurve={savedCurve}
-              activeSegment={activeSegment}
-              setActiveSegment={setActiveSegment}
+        </Col>
+
+        {/* Columna derecha: Gráficos */}
+        <Col xs={9} className="d-flex flex-column gap-3" style={{ height: '100%' }}>
+          <div style={{ height: 'calc(50% - 6px)', minHeight: 0 }}>
+            <PeakChartPanel
+              series={{
+                oil: wellProdSeries.efec_oil_prod,
+                gas: wellProdSeries.efec_gas_prod,
+                water: wellProdSeries.efec_water_prod,
+                months: wellProdSeries.month,
+              }}
+              points={points}
+              applyPeakFilter={applyPeakFilter}
+              addNewPoint={addNewPoint}
             />
           </div>
-          <div id="right-column">
+          <div style={{ height: 'calc(50% - 6px)', minHeight: 0 }}>
             <CurveEditor
               editableParams={editableParams}
               setActiveSegment={setActiveSegment}
@@ -159,8 +163,8 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
               savedCurve={savedCurve}
             />
           </div>
-        </div>
-      </div>
-    </>
+        </Col>
+      </Row>
+    </Container>
   );
 }

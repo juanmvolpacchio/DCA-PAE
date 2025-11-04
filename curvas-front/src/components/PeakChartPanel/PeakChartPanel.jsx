@@ -31,7 +31,7 @@ export default function PeakChartPanel({
 
   return (
     <div id="peak-chart-container" className="chart-panel">
-      <div className="param-panel">
+      {/* <div className="param-panel">
         <h3>Filtro picos</h3>
         <div className="filter-container">
           {Object.keys(chartParams).map((par) => {
@@ -51,7 +51,7 @@ export default function PeakChartPanel({
             );
           })}
         </div>
-      </div>
+      </div> */}
       <PeakChart series={series} points={points} addNewPoint={addNewPoint} />
     </div>
   );

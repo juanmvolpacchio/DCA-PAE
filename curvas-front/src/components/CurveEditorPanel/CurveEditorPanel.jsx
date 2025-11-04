@@ -35,11 +35,11 @@ export default function CurveEditorPanel({
   console.log('📊 CurveEditorPanel - editableParams:', editableParams);
 
   const saveCurveMutation = useMutation({
-    mutationFn: async ({ name, qo, dea, t, well, user_id, comment }) => {
+    mutationFn: async ({ name, qo, dea, start_date, well, user_id, comment }) => {
       const response = await fetch(`${API_BASE}/curves`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, qo, dea, t, well, user_id, comment }),
+        body: JSON.stringify({ name, qo, dea, start_date, well, user_id, comment }),
       });
       if (!response.ok) throw new Error("Failed to save curve");
       return response.json();
@@ -75,12 +75,12 @@ export default function CurveEditorPanel({
 
   async function handleCurveSaving() {
     if (user?.role === "admin" || user?.id === activeWell.owner) {
-      const { qo, dea, t } = editableParams[activeSegment];
+      const { qo, dea, start_date } = editableParams[activeSegment];
       saveCurveMutation.mutate({
         name: activeSegment,
         qo,
         dea,
-        t,
+        start_date,
         well: activeWell.name,
         user_id: user.id,
         comment: comment.trim() || null,
@@ -120,9 +120,10 @@ export default function CurveEditorPanel({
             <input
               id={par}
               className="curve-editor-input"
-              type="number"
-              disabled={editableParams[activeSegment] ? false : true}
-              step={par === "dea" ? 0.001 : par === "t" ? 1 : 0.01}
+              type={par === "start_date" ? "text" : "number"}
+              disabled={par === "start_date" || !editableParams[activeSegment]}
+              readOnly={par === "start_date"}
+              step={par === "dea" ? 0.001 : 0.01}
               value={editableParams[activeSegment]?.[par] || ""}
               onChange={(e) =>
                 updateEditableParam(activeSegment, par, e.target.value)
@@ -130,6 +131,28 @@ export default function CurveEditorPanel({
             />
           </div>
         ))}
+      </div>
+      <div className="params-row">
+        <div
+          className="param-item"
+          style={{
+            backgroundColor: editableParams[activeSegment]?.color || "#bbb",
+          }}
+        >
+          <label htmlFor="meses">Meses extrapolación</label>
+          <input
+            id="meses"
+            className="curve-editor-input"
+            type="number"
+            disabled={editableParams[activeSegment] ? false : true}
+            step={1}
+            min={0}
+            value={editableParams[activeSegment]?.t || ""}
+            onChange={(e) =>
+              updateEditableParam(activeSegment, "t", e.target.value)
+            }
+          />
+        </div>
       </div>
       <div className="comment-input-section">
         <label htmlFor="curve-comment">Comentario</label>

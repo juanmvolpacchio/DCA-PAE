@@ -31,7 +31,7 @@ export function getSeriesSegmentation(series, points) {
   return segments;
 }
 
-export function getNormalizedSegments(segments) {
+export function getNormalizedSegments(segments, globalMaxQo = null) {
   return Object.fromEntries(
     segments.map((segment, i) => {
       const filteredSeg = segment.filter(
@@ -45,8 +45,11 @@ export function getNormalizedSegments(segments) {
       const maxQo = Math.max(...filteredSeg);
       const maxQoOrg = Math.max(...filterSeg2);
 
+      // Use global max if provided, otherwise use local max
+      const normalizationMax = globalMaxQo !== null ? globalMaxQo : maxQoOrg;
+
       const seg = filteredSeg.map((s) => s / maxQo);
-      const segmentOrg = filterSeg2.map((s) => s / maxQoOrg);
+      const segmentOrg = filterSeg2.map((s) => s / normalizationMax);
 
       const [qo, dea] = exponentialFitter(seg);
 
@@ -57,11 +60,11 @@ export function getNormalizedSegments(segments) {
         {
           seg: segmentOrg,
           segIndexes: segIndexes,
-          t: segmentOrg.length + 12,
+          t: 12, // Default extrapolation months beyond data
           qo: Number(qo.toFixed(4)),
           dea: Number(dea.toFixed(4)),
           color: defaultColors[i % defaultColors.length],
-          realMaxQo: maxQo,
+          realMaxQo: normalizationMax,
         },
       ];
     })

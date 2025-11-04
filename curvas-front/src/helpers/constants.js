@@ -1,7 +1,7 @@
 export const curveParams = {
+  start_date: "Fecha Inicio",
   qo: "Qo",
   dea: "DEA",
-  t: "Meses",
 };
 
 export const defaultColors = [

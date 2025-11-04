@@ -29,7 +29,7 @@ export default function SavedCurvePanel({ savedCurve }) {
             <input
               id={`saved-${par}`}
               className="curve-editor-input"
-              type="number"
+              type={par === "start_date" ? "text" : "number"}
               disabled={true}
               value={savedCurve[par] || ""}
               readOnly

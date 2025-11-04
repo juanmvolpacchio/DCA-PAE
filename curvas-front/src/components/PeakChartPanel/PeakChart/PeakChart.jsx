@@ -29,7 +29,7 @@ const getLayoutXAxis = (series, zoomRanges) => {
   };
 };
 
-export default function PeakChart({ series, points, addNewPoint }) {
+export default function PeakChart({ series, points, addNewPoint, savedCurve }) {
   const [logScale, setLogScale] = useState(false);
 
   const initialRanges = {
@@ -230,7 +230,9 @@ export default function PeakChart({ series, points, addNewPoint }) {
         }}
         onClick={(e) => {
           const typePoint = e.event.button === 2 ? "limit" : "peak";
-          addNewPoint(typePoint, e.points[0].x - 1);
+          const pointIndex = e.points[0].x - 1;
+          const start_date = series.months[pointIndex];
+          addNewPoint(typePoint, pointIndex, start_date);
         }}
         onRelayout={(newRanges) => {
           const ranges = newRanges["xaxis.autorange"]

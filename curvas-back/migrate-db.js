@@ -36,7 +36,7 @@ db.serialize(() => {
     }
   });
 
-  // Step 2: Create new saved_curve table with additional columns
+  // Step 2: Create new saved_curve table with start_date instead of t
   console.log("   - Creating new saved_curve table...");
   db.run(
     `CREATE TABLE saved_curve_new (
@@ -44,7 +44,7 @@ db.serialize(() => {
       name TEXT,
       qo REAL,
       dea REAL,
-      t REAL,
+      start_date TEXT,
       well TEXT,
       user_id INTEGER,
       comment TEXT,
@@ -58,11 +58,11 @@ db.serialize(() => {
       }
       console.log("   ✓ Created table: saved_curve_new");
 
-      // Step 3: Copy existing data
+      // Step 3: Copy existing data (t is replaced with NULL for start_date)
       console.log("   - Migrating existing data...");
       db.run(
-        `INSERT INTO saved_curve_new (id, name, qo, dea, t, well, user_id, comment, created_at)
-         SELECT id, name, qo, dea, t, well, user_id, NULL, datetime('now') FROM saved_curve;`,
+        `INSERT INTO saved_curve_new (id, name, qo, dea, start_date, well, user_id, comment, created_at)
+         SELECT id, name, qo, dea, NULL, well, user_id, NULL, datetime('now') FROM saved_curve;`,
         function (err) {
           if (err) {
             console.error("   ✗ Error migrating data:", err.message);

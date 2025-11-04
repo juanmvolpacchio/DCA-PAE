@@ -20,8 +20,11 @@ export default function usePointsSegmentsAndParams(series) {
 
   const [segments, setSegments] = useState(initialSegments);
 
+  // Calculate global max from entire series (for consistent normalization)
+  const globalMaxQo = Math.max(...series.filter(s => s !== undefined && !isNaN(s)));
+
   // Initialize with only the first segment (Seg. 1)
-  const initialNormalizedSegments = getNormalizedSegments(initialSegments);
+  const initialNormalizedSegments = getNormalizedSegments(initialSegments, globalMaxQo);
   const [editableParams, setEditableParams] = useState(
     initialNormalizedSegments["Seg. 1"]
       ? { "Seg. 1": initialNormalizedSegments["Seg. 1"] }
@@ -35,7 +38,7 @@ export default function usePointsSegmentsAndParams(series) {
     setSegments(newSegments);
 
     // Update only the first segment (Seg. 1) with new calculated values
-    const normalizedSegments = getNormalizedSegments(newSegments);
+    const normalizedSegments = getNormalizedSegments(newSegments, globalMaxQo);
     if (normalizedSegments["Seg. 1"]) {
       setEditableParams({
         "Seg. 1": normalizedSegments["Seg. 1"]
@@ -43,7 +46,7 @@ export default function usePointsSegmentsAndParams(series) {
     }
   }
 
-  function addNewPoint(typePoint, indexPoint) {
+  function addNewPoint(typePoint, indexPoint, start_date) {
     // Clear all previous points and set only the new one
     const newPoints = series.map((_, i) => {
       if (i === indexPoint) {
@@ -58,10 +61,13 @@ export default function usePointsSegmentsAndParams(series) {
     setSegments(newSegments);
 
     // Update only the first segment (Seg. 1) with new calculated values
-    const normalizedSegments = getNormalizedSegments(newSegments);
+    const normalizedSegments = getNormalizedSegments(newSegments, globalMaxQo);
     if (normalizedSegments["Seg. 1"]) {
       setEditableParams({
-        "Seg. 1": normalizedSegments["Seg. 1"]
+        "Seg. 1": {
+          ...normalizedSegments["Seg. 1"],
+          start_date: start_date || null
+        }
       });
     }
   }
@@ -72,10 +78,10 @@ export default function usePointsSegmentsAndParams(series) {
         ...editableParams,
         [curveName]: {
           ...editableParams[curveName],
-          [par]: Number(value),
+          [par]: par === 'start_date' ? value : Number(value),
         },
       };
-      console.log(`✓ Updated ${par}:`, Number(value));
+      console.log(`✓ Updated ${par}:`, value);
       setEditableParams(updated);
     } else {
       console.warn('⚠️ Curve name not found:', curveName);
@@ -89,7 +95,10 @@ export default function usePointsSegmentsAndParams(series) {
         [curveName]: {
           ...editableParams[curveName],
           ...Object.fromEntries(
-            Object.entries(updates).map(([key, value]) => [key, Number(value)])
+            Object.entries(updates).map(([key, value]) => [
+              key,
+              key === 'start_date' ? value : Number(value)
+            ])
           ),
         },
       };

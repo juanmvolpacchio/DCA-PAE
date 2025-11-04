@@ -8,6 +8,7 @@ export default function PeakChartPanel({
   points,
   applyPeakFilter,
   addNewPoint,
+  savedCurve,
 }) {
   const chartParams = {
     minHeight: "Altura",
@@ -52,7 +53,12 @@ export default function PeakChartPanel({
           })}
         </div>
       </div> */}
-      <PeakChart series={series} points={points} addNewPoint={addNewPoint} />
+      <PeakChart
+        series={series}
+        points={points}
+        addNewPoint={addNewPoint}
+        savedCurve={savedCurve}
+      />
     </div>
   );
 }

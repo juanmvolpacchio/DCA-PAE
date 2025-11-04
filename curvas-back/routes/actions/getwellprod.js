@@ -6,7 +6,7 @@ module.exports = async function getWellProdDataHandler(req, res, next) {
     const { well } = req.params;
     if (!well) return res.status(400).json({ error: "well is required" });
 
-    const rows = await all("SELECT * FROM well_production WHERE well = ?;", [
+    const rows = await all("SELECT * FROM well_production WHERE well = ? ORDER BY month ASC;", [
       well,
     ]);
 

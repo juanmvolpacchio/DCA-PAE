@@ -61,17 +61,27 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
       if (firstSegmentName && mostRecentCurve && !initializedRef.current) {
         console.log('🔧 Initializing curve params from saved curve:', mostRecentCurve);
 
-        // Update all three parameters at once
-        updateMultipleParams(firstSegmentName, {
-          qo: mostRecentCurve.qo,
-          dea: mostRecentCurve.dea,
-          t: mostRecentCurve.t
-        });
+        // Find the index of the saved curve's start_date
+        if (mostRecentCurve.start_date) {
+          const startDateCurve = new Date(mostRecentCurve.start_date).getTime();
+          const pointIndex = wellProdSeries.month.findIndex((monthStr) => {
+            const monthDate = new Date(monthStr).getTime();
+            return monthDate === startDateCurve;
+          });
+
+          if (pointIndex !== -1) {
+            console.log('📍 Found saved curve point at index:', pointIndex);
+            // Set the point on the production chart
+            addNewPoint('peak', pointIndex, mostRecentCurve.start_date);
+          }
+        }
+
+        // Don't overwrite qo/dea - let addNewPoint handle everything
 
         initializedRef.current = true;
       }
     }
-  }, [wellSavedCurves]);
+  }, [wellSavedCurves, wellProdSeries.month]);
 
   // Reset initialization flag when well changes
   useEffect(() => {
@@ -85,15 +95,20 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
       if (firstSegmentName) {
         console.log('🔄 Resetting to saved curve:', savedCurve);
 
-        // Clear all selected points from production chart
-        clearAllPoints();
+        // Find the index of the saved curve's start_date and set the point
+        if (savedCurve.start_date) {
+          const startDateCurve = new Date(savedCurve.start_date).getTime();
+          const pointIndex = wellProdSeries.month.findIndex((monthStr) => {
+            const monthDate = new Date(monthStr).getTime();
+            return monthDate === startDateCurve;
+          });
 
-        // Reset parameters to saved curve values
-        updateMultipleParams(firstSegmentName, {
-          qo: savedCurve.qo,
-          dea: savedCurve.dea,
-          t: savedCurve.t
-        });
+          if (pointIndex !== -1) {
+            console.log('📍 Resetting to saved curve point at index:', pointIndex);
+            // Set the point on the production chart
+            addNewPoint('peak', pointIndex, savedCurve.start_date);
+          }
+        }
       }
     }
   }
@@ -153,6 +168,7 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
               points={points}
               applyPeakFilter={applyPeakFilter}
               addNewPoint={addNewPoint}
+              savedCurve={savedCurve}
             />
           </div>
           <div style={{ height: 'calc(50% - 6px)', minHeight: 0 }}>

@@ -1,42 +1,42 @@
 // Express handler: POST /curves
-// Expects body: { name, qo, dea, t, well, user_id, comment (optional) }
+// Expects body: { name, qo, dea, start_date, well, user_id, comment (optional) }
 const { run } = require("../../db");
 
 module.exports = async function saveCurveHandler(req, res, next) {
   try {
-    const { name, qo, dea, t, well, user_id, comment } = req.body || {};
+    const { name, qo, dea, start_date, well, user_id, comment } = req.body || {};
 
     if (
       !name ||
       !well ||
       qo === undefined ||
       dea === undefined ||
-      t === undefined ||
+      !start_date ||
       user_id === undefined
     ) {
       return res
         .status(400)
-        .json({ error: "name, well, qo, dea, t, user_id are required" });
+        .json({ error: "name, well, qo, dea, start_date, user_id are required" });
     }
 
     const result = await run(
-      `INSERT INTO saved_curve (id, name, qo, dea, t, well, user_id, comment, created_at)
+      `INSERT INTO saved_curve (id, name, qo, dea, start_date, well, user_id, comment, created_at)
        VALUES(?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
        ON CONFLICT(id) DO UPDATE SET
-         name = ?, qo = ?, dea = ?, t = ?, well = ?, user_id = ?, comment = ?, created_at = datetime('now');`,
+         name = ?, qo = ?, dea = ?, start_date = ?, well = ?, user_id = ?, comment = ?, created_at = datetime('now');`,
       [
         name + well,
         name,
         qo,
         dea,
-        t,
+        start_date,
         well,
         user_id,
         comment || null,
         name,
         qo,
         dea,
-        t,
+        start_date,
         well,
         user_id,
         comment || null,
@@ -51,7 +51,7 @@ module.exports = async function saveCurveHandler(req, res, next) {
         well,
         qo: Number(qo),
         dea: Number(dea),
-        t: Number(t),
+        start_date,
         user_id: Number(user_id),
         comment: comment || null,
       },

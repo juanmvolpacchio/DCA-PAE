@@ -1,23 +1,60 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 
 import Plot from "react-plotly.js";
 
-const getLayoutXAxis = (wellProdSeries, editableParams, zoomRanges) => {
-  const months = wellProdSeries.month
-    .filter((x, i) => editableParams["Seg. 1"].segIndexes.includes(i))
-    .map((month) =>
-      new Date(month).toLocaleDateString("es-ES", {
+const getLayoutXAxis = (wellProdSeries, editableParams, currentBaseMonths, extrapolationMonths, zoomRanges) => {
+  const startDate = editableParams["Seg. 1"]?.start_date;
+
+  if (!startDate || !wellProdSeries.month.length) {
+    return {
+      title: "Mes",
+      titlefont: { size: 9 },
+      tickfont: { size: 7 },
+      range: zoomRanges.x,
+      tickangle: -45,
+      automargin: true,
+    };
+  }
+
+  // Find start index in data
+  const startIndex = wellProdSeries.month.findIndex(monthStr => {
+    return new Date(monthStr).getTime() === new Date(startDate).getTime();
+  });
+
+  if (startIndex === -1) return { title: "Mes" };
+
+  // Generate month labels from start_date to end of data + extrapolation
+  const totalMonths = currentBaseMonths + extrapolationMonths;
+  const months = [];
+
+  for (let i = 0; i < totalMonths; i++) {
+    const dataIndex = startIndex + i;
+    if (dataIndex < wellProdSeries.month.length) {
+      // Use real data month
+      months.push(new Date(wellProdSeries.month[dataIndex]).toLocaleDateString("es-ES", {
         month: "numeric",
         year: "numeric",
-      })
-    );
-  const total = months.length;
+      }));
+    } else {
+      // Extrapolated months: calculate from last data month
+      const lastMonth = new Date(wellProdSeries.month[wellProdSeries.month.length - 1]);
+      const monthsAhead = dataIndex - wellProdSeries.month.length + 1;
+      const extrapDate = new Date(lastMonth);
+      extrapDate.setMonth(extrapDate.getMonth() + monthsAhead);
+      months.push(extrapDate.toLocaleDateString("es-ES", {
+        month: "numeric",
+        year: "numeric",
+      }));
+    }
+  }
+
   const maxTicks = 15;
-  const step = Math.ceil(total / maxTicks);
-  const tickvals = Array.from({ length: total }, (_, i) => i + 1).filter(
+  const step = Math.max(Math.ceil(totalMonths / maxTicks), 1);
+  const tickvals = Array.from({ length: totalMonths }, (_, i) => i + 1).filter(
     (v) => (v - 1) % step === 0
   );
   const ticktext = months.filter((_, i) => i % step === 0);
+
   return {
     title: "Mes",
     titlefont: { size: 9 },
@@ -36,8 +73,6 @@ export default function CurveEditor({
   wellProdSeries,
   savedCurve,
 }) {
-  console.log('🎨 CurveEditor render - editableParams:', editableParams);
-
   const lastMonthlyProd = wellProdSeries.efec_oil_prod.at(-1);
 
   const [visibleLines, setVisibleLines] = useState(
@@ -57,12 +92,10 @@ export default function CurveEditor({
     savedCurve?.qo || 0
   );
 
-  const initialRanges = {
+  const [zoomRanges, setZoomRanges] = useState({
     x: [0, 120],
     y: [0, maxQo * 1.1],
-  };
-
-  const [zoomRanges, setZoomRanges] = useState(initialRanges);
+  });
 
   const [containerSize, setContainerSize] = useState({
     width: 600,
@@ -91,44 +124,88 @@ export default function CurveEditor({
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  // Auto-scale when editableParams or savedCurve change
-  useEffect(() => {
-    if (plotRef.current) {
-      console.log('📐 Auto-scaling chart');
-      // Trigger autoscale by resetting to initial ranges based on current data
-      const allQoValues = [
-        ...Object.values(editableParams).map(p => p.qo),
-        savedCurve?.qo || 0
-      ].filter(v => v > 0);
+  // Calculate base months from start_date to last data point
+  const calculateBaseMonths = (startDate) => {
+    if (!startDate || !wellProdSeries.month.length) return 0;
 
-      const allTValues = [
-        ...Object.values(editableParams).map(p => p.t),
-        savedCurve?.t || 0
-      ].filter(v => v > 0);
+    const start = new Date(startDate);
+    const lastDataMonth = new Date(wellProdSeries.month[wellProdSeries.month.length - 1]);
 
-      if (allQoValues.length > 0 && allTValues.length > 0) {
-        const newMaxQo = Math.max(...allQoValues);
-        const newMaxT = Math.max(...allTValues);
+    // Find the actual index in the data where the start_date is
+    const startIndex = wellProdSeries.month.findIndex(monthStr => {
+      const monthDate = new Date(monthStr);
+      return monthDate.getTime() === start.getTime();
+    });
 
-        const newRanges = {
-          x: [0, Math.min(newMaxT * 1.1, 240)],
-          y: [0, newMaxQo * 1.1],
-        };
-
-        setZoomRanges(newRanges);
-      }
+    // If start_date is found in data, calculate from that point to the end
+    if (startIndex !== -1) {
+      return wellProdSeries.month.length - startIndex;
     }
-  }, [editableParams, savedCurve]);
+
+    // Fallback: calculate time difference
+    const monthsToLastData = (lastDataMonth.getFullYear() - start.getFullYear()) * 12
+                           + (lastDataMonth.getMonth() - start.getMonth()) + 1;
+    return Math.max(monthsToLastData, 0);
+  };
+
+  // Calculate base months for current curve
+  const currentBaseMonths = editableParams["Seg. 1"]?.start_date
+    ? calculateBaseMonths(editableParams["Seg. 1"].start_date)
+    : 0;
+
+  // Calculate base months for saved curve
+  const savedBaseMonths = savedCurve?.start_date
+    ? calculateBaseMonths(savedCurve.start_date)
+    : 0;
+
+  // Get extrapolation months (always positive)
+  const extrapolationMonths = Math.max(editableParams["Seg. 1"]?.t || 12, 0);
+
+  // Calculate initial ranges based on actual data (memoized to prevent infinite loops)
+  const initialRanges = useMemo(() => ({
+    x: [0, Math.max(currentBaseMonths + extrapolationMonths, 12)],
+    y: [0, maxQo * 1.1],
+  }), [currentBaseMonths, extrapolationMonths, maxQo]);
+
+  // Auto-scale when savedCurve is loaded
+  useEffect(() => {
+    if (savedCurve && plotRef.current) {
+      setZoomRanges(initialRanges);
+    }
+  }, [savedCurve?.id, initialRanges]);
+
+  // Calculate x offset for saved curve based on its start_date
+  const savedCurveXOffset = (() => {
+    if (!savedCurve?.start_date || !editableParams["Seg. 1"]?.start_date) return 0;
+
+    const savedStart = new Date(savedCurve.start_date);
+    const currentStart = new Date(editableParams["Seg. 1"].start_date);
+
+    // Find indices in wellProdSeries
+    const savedStartIndex = wellProdSeries.month.findIndex(m =>
+      new Date(m).getTime() === savedStart.getTime()
+    );
+    const currentStartIndex = wellProdSeries.month.findIndex(m =>
+      new Date(m).getTime() === currentStart.getTime()
+    );
+
+    if (savedStartIndex === -1 || currentStartIndex === -1) return 0;
+
+    // Offset is the difference in indices
+    return savedStartIndex - currentStartIndex;
+  })();
 
   // Generate saved curve data
   const savedCurveData = savedCurve
-    ? [
-        {
-          x: Array.from(new Array(Number(savedCurve.t)), (x, n) => n + 1),
-          y: Array.from(
-            new Array(Number(savedCurve.t)),
-            (x, n) => Number(savedCurve.qo) * Math.E ** (-Number(savedCurve.dea) * n)
-          ),
+    ? (() => {
+        const totalMonths = savedBaseMonths + extrapolationMonths;
+        return [
+          {
+            x: Array.from(new Array(totalMonths), (x, n) => n + 1 + savedCurveXOffset),
+            y: Array.from(
+              new Array(totalMonths),
+              (x, n) => Number(savedCurve.qo) * Math.E ** (-Number(savedCurve.dea) * n)
+            ),
           type: "scatter",
           mode: "lines",
           line: {
@@ -145,18 +222,21 @@ export default function CurveEditor({
           name: "Curva Guardada",
           visible: true,
           showlegend: true,
-        },
-      ]
+        }];
+      })()
     : [];
 
   // Generate editable curves data
   const editableCurvesData = Object.entries(editableParams)
     .map(([name, par]) => {
+      // Calculate total months: base months + extrapolation
+      const totalMonths = currentBaseMonths + extrapolationMonths;
+
       return [
         {
-          x: Array.from(new Array(par.t), (x, n) => n + 1),
+          x: Array.from(new Array(totalMonths), (x, n) => n + 1),
           y: Array.from(
-            new Array(par.t),
+            new Array(totalMonths),
             (x, n) => par.qo * Math.E ** (-par.dea * n)
           ),
           type: "scatter",
@@ -167,7 +247,7 @@ export default function CurveEditor({
             dash: "dash",
           },
           text: Array.from(
-            new Array(par.t),
+            new Array(totalMonths),
             (x, i) =>
               `Acumulada al mes ${i + 1}: ${Array.from(
                 new Array(i + 1),
@@ -192,8 +272,12 @@ export default function CurveEditor({
           type: "scatter",
           mode: "markers",
           marker: {
-            size: 4,
-            color: par.color,
+            size: 5,
+            color: "#2ca02c", // Green color for real data points
+            line: {
+              width: 1,
+              color: "#1a661a"
+            }
           },
           text: par.seg?.map(
             (s, i) => `Real mes ${i + 1}: ${(s * par.realMaxQo).toFixed(2)}m3`
@@ -204,9 +288,9 @@ export default function CurveEditor({
               size: 10,
             },
           },
-          name,
-          visible: visibleLines[name],
-          showlegend: false,
+          name: "Datos Reales",
+          visible: true, // Always visible
+          showlegend: true,
         },
       ];
     })
@@ -236,7 +320,7 @@ export default function CurveEditor({
             x: 1.02,
             y: 1,
           },
-          xaxis: getLayoutXAxis(wellProdSeries, editableParams, zoomRanges),
+          xaxis: getLayoutXAxis(wellProdSeries, editableParams, currentBaseMonths, extrapolationMonths, zoomRanges),
           yaxis: {
             title: "Oil [m3]",
             titlefont: { size: 10 },

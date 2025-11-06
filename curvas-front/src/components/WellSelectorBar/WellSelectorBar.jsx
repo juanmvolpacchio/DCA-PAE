@@ -75,7 +75,7 @@ export default function WellSelectorBar({ wells, user }) {
             setManagUnit(e.target.value);
           }}
         >
-          <option value={""}>Todos</option>
+          <option value={""}>Todas las UG</option>
 
           {Array.from(new Set(wells.map((w) => w.manag_unit))).map((unit) => (
             <option key={unit} value={unit}>

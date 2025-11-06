@@ -11,7 +11,6 @@ import { useWell } from "../../hooks/useWell";
 import CurveEditorPanel from "../CurveEditorPanel/CurveEditorPanel";
 import SavedCurvePanel from "../SavedCurvePanel/SavedCurvePanel";
 import PeakChartPanel from "../PeakChartPanel/PeakChartPanel";
-import CurveEditor from "../CurveEditorPanel/CurveEditor/CurveEditor";
 
 import { API_BASE } from "../../helpers/constants";
 
@@ -167,7 +166,7 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
 
         {/* Columna derecha: Gráficos */}
         <Col xs={9} className="d-flex flex-column gap-3" style={{ height: '100%' }}>
-          <div style={{ height: 'calc(50% - 6px)', minHeight: 0 }}>
+          <div style={{ height: '100%', minHeight: 0 }}>
             <PeakChartPanel
               series={{
                 oil: wellProdSeries.efec_oil_prod,
@@ -180,15 +179,7 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
               addNewPoint={addNewPoint}
               savedCurve={savedCurve}
               showNewCurve={isNewCurveVisible}
-            />
-          </div>
-          <div style={{ height: 'calc(50% - 6px)', minHeight: 0 }}>
-            <CurveEditor
               editableParams={editableParams}
-              setActiveSegment={setActiveSegment}
-              wellProdSeries={wellProdSeries}
-              savedCurve={savedCurve}
-              showNewCurve={isNewCurveVisible}
             />
           </div>
         </Col>

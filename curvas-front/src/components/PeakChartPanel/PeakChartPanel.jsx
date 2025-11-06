@@ -10,6 +10,7 @@ export default function PeakChartPanel({
   addNewPoint,
   savedCurve,
   showNewCurve,
+  editableParams,
 }) {
   const chartParams = {
     minHeight: "Altura",
@@ -60,6 +61,7 @@ export default function PeakChartPanel({
         addNewPoint={addNewPoint}
         savedCurve={savedCurve}
         showNewCurve={showNewCurve}
+        editableParams={editableParams}
       />
     </div>
   );

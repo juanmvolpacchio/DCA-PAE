@@ -29,7 +29,7 @@ const getLayoutXAxis = (series, zoomRanges) => {
   };
 };
 
-export default function PeakChart({ series, points, addNewPoint, savedCurve, showNewCurve }) {
+export default function PeakChart({ series, points, addNewPoint, savedCurve, showNewCurve, editableParams }) {
   const [logScale, setLogScale] = useState(false);
 
   // Calculate EUR (Estimated Ultimate Recovery) - total oil produced
@@ -38,6 +38,19 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve, sho
   };
 
   const eur = calculateEUR();
+
+  // Helper function to calculate extrapolated oil without normalization
+  const calculateExtrapolatedOil = (qo, dea, months, realMaxQo) => {
+    let total = 0;
+    for (let n = 0; n < months; n++) {
+      total += (qo * Math.E ** (-dea * n)) * realMaxQo;
+    }
+    return total;
+  };
+
+  // Get extrapolation parameters
+  const extrapolationMonths = Math.max(editableParams?.["Seg. 1"]?.t || 12, 0);
+  const realMaxQo = editableParams?.["Seg. 1"]?.realMaxQo || 1;
 
   const initialRanges = {
     oil: {
@@ -84,8 +97,90 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve, sho
 
   const xaxis = getLayoutXAxis(series, zoomRanges);
 
+  // Generate saved curve data (blue curve)
+  const savedCurveData = savedCurve && savedCurve.start_date
+    ? (() => {
+        const startIndex = series.months.findIndex(month =>
+          new Date(month).getTime() === new Date(savedCurve.start_date).getTime()
+        );
+
+        if (startIndex === -1) return null;
+
+        const totalMonths = series.months.length - startIndex + extrapolationMonths;
+        const savedCurveExtrapolated = calculateExtrapolatedOil(
+          Number(savedCurve.qo),
+          Number(savedCurve.dea),
+          extrapolationMonths,
+          realMaxQo
+        );
+
+        return {
+          x: Array.from(new Array(totalMonths), (_, n) => n + 1 + startIndex),
+          y: Array.from(new Array(totalMonths), (_, n) =>
+            Number(savedCurve.qo) * Math.E ** (-Number(savedCurve.dea) * n) * realMaxQo
+          ),
+          type: "scatter",
+          mode: "lines",
+          line: {
+            width: 3,
+            color: "#4A90E2",
+            dash: "solid",
+          },
+          hovertemplate: "Curva Guardada<br>Mes %{x}: %{y:.2f}m³<extra></extra>",
+          hoverlabel: {
+            font: { size: 10 },
+          },
+          name: `Curva Guardada (Extrap: ${savedCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³)`,
+          visible: true,
+          showlegend: true,
+        };
+      })()
+    : null;
+
+  // Generate new curve data (orange curve) - only if visible
+  const newCurveData = showNewCurve && editableParams?.["Seg. 1"]
+    ? (() => {
+        const startIndex = series.months.findIndex(month =>
+          new Date(month).getTime() === new Date(editableParams["Seg. 1"].start_date).getTime()
+        );
+
+        if (startIndex === -1) return null;
+
+        const totalMonths = series.months.length - startIndex + extrapolationMonths;
+        const newCurveExtrapolated = calculateExtrapolatedOil(
+          editableParams["Seg. 1"].qo,
+          editableParams["Seg. 1"].dea,
+          extrapolationMonths,
+          realMaxQo
+        );
+
+        return {
+          x: Array.from(new Array(totalMonths), (_, n) => n + 1 + startIndex),
+          y: Array.from(new Array(totalMonths), (_, n) =>
+            editableParams["Seg. 1"].qo * Math.E ** (-editableParams["Seg. 1"].dea * n) * realMaxQo
+          ),
+          type: "scatter",
+          mode: "lines",
+          line: {
+            width: 3,
+            color: "#FF8C42",
+            dash: "dash",
+          },
+          hovertemplate: "Nueva Curva<br>Mes %{x}: %{y:.2f}m³<extra></extra>",
+          hoverlabel: {
+            font: { size: 10 },
+          },
+          name: `Nueva Curva (Extrap: ${newCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³)`,
+          visible: true,
+          showlegend: true,
+        };
+      })()
+    : null;
+
   // Prepare data array and filter out null values
   const plotData = [
+          savedCurveData,
+          newCurveData,
           {
             x: Array.from(new Array(series.oil.length), (x, n) => n + 1),
             y: series.oil,

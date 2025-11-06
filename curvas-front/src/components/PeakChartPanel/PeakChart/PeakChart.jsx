@@ -29,7 +29,7 @@ const getLayoutXAxis = (series, zoomRanges) => {
   };
 };
 
-export default function PeakChart({ series, points, addNewPoint, savedCurve }) {
+export default function PeakChart({ series, points, addNewPoint, savedCurve, showNewCurve }) {
   const [logScale, setLogScale] = useState(false);
 
   const initialRanges = {
@@ -76,10 +76,9 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve }) {
   }, []);
 
   const xaxis = getLayoutXAxis(series, zoomRanges);
-  return (
-    <div className="chart-displayer" ref={containerRef}>
-      <Plot
-        data={[
+
+  // Prepare data array and filter out null values
+  const plotData = [
           {
             x: Array.from(new Array(series.oil.length), (x, n) => n + 1),
             y: series.oil,
@@ -101,7 +100,8 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve }) {
             name: "Oil",
             showlegend: true,
           },
-          {
+          // Orange point for new curve - only show if Nueva Curva panel is visible
+          showNewCurve ? {
             x: Array.from(new Array(series.oil.length), (x, n) => n + 1),
             y: series.oil.map((qo, i) =>
               points[i] === "peak" ? qo : undefined
@@ -109,17 +109,39 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve }) {
             type: "scatter",
             mode: "markers",
             marker: {
-              color: "orangered",
+              color: "#FF8C42",
               size: 8,
             },
-            hovertemplate: "Pico: (%{x},%{y})<extra></extra>",
+            hovertemplate: "Nueva Curva: (%{x},%{y})<extra></extra>",
             hoverlabel: {
               font: {
                 size: 8,
               },
             },
             showlegend: false,
-          },
+          } : null,
+          // Blue point for saved curve
+          savedCurve && savedCurve.start_date ? {
+            x: [series.months.findIndex(month =>
+              new Date(month).getTime() === new Date(savedCurve.start_date).getTime()
+            ) + 1],
+            y: [series.oil[series.months.findIndex(month =>
+              new Date(month).getTime() === new Date(savedCurve.start_date).getTime()
+            )]],
+            type: "scatter",
+            mode: "markers",
+            marker: {
+              color: "#4A90E2",
+              size: 8,
+            },
+            hovertemplate: "Curva Guardada: (%{x},%{y})<extra></extra>",
+            hoverlabel: {
+              font: {
+                size: 8,
+              },
+            },
+            showlegend: false,
+          } : null,
           {
             x: Array.from(new Array(series.oil.length), (x, n) => n + 1),
             y: series.oil.map((qo, i) =>
@@ -179,7 +201,12 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve }) {
             name: "Agua",
             yaxis: "y3",
           },
-        ]}
+  ].filter(Boolean);
+
+  return (
+    <div className="chart-displayer" ref={containerRef}>
+      <Plot
+        data={plotData}
         layout={{
           plot_bgcolor: "#eee",
           paper_bgcolor: "#faf3e1",

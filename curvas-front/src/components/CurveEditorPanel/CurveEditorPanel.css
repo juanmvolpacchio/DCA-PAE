@@ -37,6 +37,10 @@ body {
   overflow-y: auto;
 }
 
+.new-curve-item label {
+  color: white;
+}
+
 .comment-input-section {
   margin-top: 8px;
   padding: 8px;

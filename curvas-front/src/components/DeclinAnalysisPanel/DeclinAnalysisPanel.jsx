@@ -50,6 +50,9 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
   const [savedCurve, setSavedCurve] = useState(null);
   const initializedRef = useRef(false);
 
+  // Track visibility of CurveEditorPanel (Nueva Curva)
+  const [isNewCurveVisible, setIsNewCurveVisible] = useState(false);
+
   // Initialize editableParams with saved curve when available
   useEffect(() => {
     if (wellSavedCurves && wellSavedCurves.length > 0) {
@@ -86,6 +89,7 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
   // Reset initialization flag when well changes
   useEffect(() => {
     initializedRef.current = false;
+    setIsNewCurveVisible(false); // Hide new curve panel when well changes
   }, [well]);
 
   // Function to reset editable params to saved curve
@@ -141,18 +145,24 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
       <Row className="h-100 g-3">
         {/* Columna izquierda: Curva guardada y Curva actual */}
         <Col xs={3} className="d-flex flex-column gap-3">
-          <SavedCurvePanel savedCurve={savedCurve} />
-          <CurveEditorPanel
-            wellProdSeries={wellProdSeries}
-            editableParams={editableParams}
-            updateEditableParam={updateEditableParam}
-            removeEditableParam={removeEditableParam}
-            activeWell={activeWell}
-            onResetToSaved={handleResetToSaved}
+          <SavedCurvePanel
             savedCurve={savedCurve}
-            activeSegment={activeSegment}
-            setActiveSegment={setActiveSegment}
+            onEdit={() => setIsNewCurveVisible(!isNewCurveVisible)}
+            isEditMode={isNewCurveVisible}
           />
+          {isNewCurveVisible && (
+            <CurveEditorPanel
+              wellProdSeries={wellProdSeries}
+              editableParams={editableParams}
+              updateEditableParam={updateEditableParam}
+              removeEditableParam={removeEditableParam}
+              activeWell={activeWell}
+              onResetToSaved={handleResetToSaved}
+              savedCurve={savedCurve}
+              activeSegment={activeSegment}
+              setActiveSegment={setActiveSegment}
+            />
+          )}
         </Col>
 
         {/* Columna derecha: Gráficos */}
@@ -169,6 +179,7 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
               applyPeakFilter={applyPeakFilter}
               addNewPoint={addNewPoint}
               savedCurve={savedCurve}
+              showNewCurve={isNewCurveVisible}
             />
           </div>
           <div style={{ height: 'calc(50% - 6px)', minHeight: 0 }}>
@@ -177,6 +188,7 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
               setActiveSegment={setActiveSegment}
               wellProdSeries={wellProdSeries}
               savedCurve={savedCurve}
+              showNewCurve={isNewCurveVisible}
             />
           </div>
         </Col>

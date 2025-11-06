@@ -72,6 +72,7 @@ export default function CurveEditor({
   setActiveSegment,
   wellProdSeries,
   savedCurve,
+  showNewCurve,
 }) {
   const lastMonthlyProd = wellProdSeries.efec_oil_prod.at(-1);
 
@@ -210,7 +211,7 @@ export default function CurveEditor({
           mode: "lines",
           line: {
             width: 3,
-            color: "#0066cc",
+            color: "#4A90E2",
             dash: "solid",
           },
           hovertemplate: "Curva Guardada<br>Mes %{x}: %{y:.2f}m3<extra></extra>",
@@ -226,81 +227,85 @@ export default function CurveEditor({
       })()
     : [];
 
-  // Generate editable curves data
-  const editableCurvesData = Object.entries(editableParams)
-    .map(([name, par]) => {
-      // Calculate total months: base months + extrapolation
-      const totalMonths = currentBaseMonths + extrapolationMonths;
+  // Generate new curve line data - only show if Nueva Curva panel is visible
+  const newCurveLineData = showNewCurve
+    ? Object.entries(editableParams)
+        .map(([name, par]) => {
+          // Calculate total months: base months + extrapolation
+          const totalMonths = currentBaseMonths + extrapolationMonths;
 
-      return [
-        {
-          x: Array.from(new Array(totalMonths), (x, n) => n + 1),
-          y: Array.from(
-            new Array(totalMonths),
-            (x, n) => par.qo * Math.E ** (-par.dea * n)
-          ),
-          type: "scatter",
-          mode: "lines",
-          line: {
-            width: 3,
-            color: "#ff6600",
-            dash: "dash",
-          },
-          text: Array.from(
-            new Array(totalMonths),
-            (x, i) =>
-              `Acumulada al mes ${i + 1}: ${Array.from(
-                new Array(i + 1),
-                (x, n) => lastMonthlyProd * Math.E ** (-par.dea * n)
-              )
-                .reduce((n, ac) => n + ac, 0)
-                .toFixed(2)}m3`
-          ),
-          hovertemplate: "%{text}<extra></extra>",
-          hoverlabel: {
-            font: {
-              size: 10,
-            },
-          },
-          name: name + " (Actual)",
-          visible: visibleLines[name],
-          showlegend: true,
-        },
-        {
-          x: par.seg?.map((s, i) => i + 1),
-          y: par.seg,
-          type: "scatter",
-          mode: "markers",
-          marker: {
-            size: 5,
-            color: "#2ca02c", // Green color for real data points
+          return {
+            x: Array.from(new Array(totalMonths), (x, n) => n + 1),
+            y: Array.from(
+              new Array(totalMonths),
+              (x, n) => par.qo * Math.E ** (-par.dea * n)
+            ),
+            type: "scatter",
+            mode: "lines",
             line: {
-              width: 1,
-              color: "#1a661a"
-            }
-          },
-          text: par.seg?.map(
-            (s, i) => `Real mes ${i + 1}: ${(s * par.realMaxQo).toFixed(2)}m3`
-          ),
-          hovertemplate: "%{text}<extra></extra>",
-          hoverlabel: {
-            font: {
-              size: 10,
+              width: 3,
+              color: "#FF8C42",
+              dash: "dash",
             },
-          },
-          name: "Datos Reales",
-          visible: true, // Always visible
-          showlegend: true,
+            text: Array.from(
+              new Array(totalMonths),
+              (x, i) =>
+                `Acumulada al mes ${i + 1}: ${Array.from(
+                  new Array(i + 1),
+                  (x, n) => lastMonthlyProd * Math.E ** (-par.dea * n)
+                )
+                  .reduce((n, ac) => n + ac, 0)
+                  .toFixed(2)}m3`
+            ),
+            hovertemplate: "%{text}<extra></extra>",
+            hoverlabel: {
+              font: {
+                size: 10,
+              },
+            },
+            name: name + " (Nueva Curva)",
+            visible: visibleLines[name],
+            showlegend: true,
+          };
+        })
+    : [];
+
+  // Real data points - always visible
+  const realDataPoints = Object.entries(editableParams)
+    .map(([name, par]) => {
+      return {
+        x: par.seg?.map((s, i) => i + 1),
+        y: par.seg,
+        type: "scatter",
+        mode: "markers",
+        marker: {
+          size: 5,
+          color: "#2ca02c", // Green color for real data points
+          line: {
+            width: 1,
+            color: "#1a661a"
+          }
         },
-      ];
-    })
-    .flat();
+        text: par.seg?.map(
+          (s, i) => `Real mes ${i + 1}: ${(s * par.realMaxQo).toFixed(2)}m3`
+        ),
+        hovertemplate: "%{text}<extra></extra>",
+        hoverlabel: {
+          font: {
+            size: 10,
+          },
+        },
+        name: "Datos Reales",
+        visible: true, // Always visible
+        showlegend: true,
+      };
+    });
 
   return (
     <div className="chart-displayer" ref={containerRef}>
       <Plot
         ref={plotRef}
-        data={[...savedCurveData, ...editableCurvesData]}
+        data={[...savedCurveData, ...newCurveLineData, ...realDataPoints]}
         layout={{
           plot_bgcolor: "#eee",
           paper_bgcolor: "#faf3e1",

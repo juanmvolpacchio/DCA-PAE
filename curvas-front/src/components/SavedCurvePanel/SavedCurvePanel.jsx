@@ -1,7 +1,7 @@
 import { curveParams } from "../../helpers/constants";
 import "./SavedCurvePanel.css";
 
-export default function SavedCurvePanel({ savedCurve }) {
+export default function SavedCurvePanel({ savedCurve, onEdit, isEditMode }) {
   if (!savedCurve) {
     return (
       <div id="saved-curve-params-panel" className="param-panel">
@@ -15,14 +15,23 @@ export default function SavedCurvePanel({ savedCurve }) {
 
   return (
     <div id="saved-curve-params-panel" className="param-panel compact-panel">
-      <h3>Curva Guardada</h3>
+      <div className="panel-header">
+        <h3>Curva Guardada</h3>
+        <button
+          className={`edit-button ${isEditMode ? 'active' : ''}`}
+          onClick={onEdit}
+          title={isEditMode ? "Ocultar Nueva Curva" : "Editar curva"}
+        >
+          {isEditMode ? '✖️ Cerrar' : '✏️ Editar'}
+        </button>
+      </div>
       <div className="params-row">
         {Object.entries(curveParams).map(([par, name]) => (
           <div
             key={par}
-            className="param-item"
+            className="param-item saved-curve-item"
             style={{
-              backgroundColor: "#aaa",
+              backgroundColor: "#4A90E2",
             }}
           >
             <label htmlFor={`saved-${par}`}>{name}</label>

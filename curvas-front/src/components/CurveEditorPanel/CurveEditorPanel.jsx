@@ -106,14 +106,14 @@ export default function CurveEditorPanel({
 
   return (
     <div id="curve-editor-params-panel" className="param-panel compact-panel">
-      <h3>Curva Actual</h3>
+      <h3>Nueva Curva</h3>
       <div className="params-row">
         {Object.entries(curveParams).map(([par, name]) => (
           <div
             key={par}
-            className="param-item"
+            className="param-item new-curve-item"
             style={{
-              backgroundColor: editableParams[activeSegment]?.color || "#bbb",
+              backgroundColor: "#FF8C42",
             }}
           >
             <label htmlFor={par}>{name}</label>
@@ -134,9 +134,9 @@ export default function CurveEditorPanel({
       </div>
       <div className="params-row">
         <div
-          className="param-item"
+          className="param-item new-curve-item"
           style={{
-            backgroundColor: editableParams[activeSegment]?.color || "#bbb",
+            backgroundColor: "#FF8C42",
           }}
         >
           <label htmlFor="meses">Meses extrapolación</label>

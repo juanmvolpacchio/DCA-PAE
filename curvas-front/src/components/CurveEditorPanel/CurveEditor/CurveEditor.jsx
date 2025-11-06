@@ -162,6 +162,31 @@ export default function CurveEditor({
   // Get extrapolation months (always positive)
   const extrapolationMonths = Math.max(editableParams["Seg. 1"]?.t || 12, 0);
 
+  // Calculate extrapolated oil for saved curve
+  const calculateExtrapolatedOil = (qo, dea, months) => {
+    let total = 0;
+    for (let n = 0; n < months; n++) {
+      total += qo * Math.E ** (-dea * n);
+    }
+    return total;
+  };
+
+  const savedCurveExtrapolated = savedCurve
+    ? calculateExtrapolatedOil(
+        Number(savedCurve.qo),
+        Number(savedCurve.dea),
+        extrapolationMonths
+      )
+    : 0;
+
+  const newCurveExtrapolated = editableParams["Seg. 1"]
+    ? calculateExtrapolatedOil(
+        editableParams["Seg. 1"].qo,
+        editableParams["Seg. 1"].dea,
+        extrapolationMonths
+      )
+    : 0;
+
   // Calculate initial ranges based on actual data (memoized to prevent infinite loops)
   const initialRanges = useMemo(() => ({
     x: [0, Math.max(currentBaseMonths + extrapolationMonths, 12)],
@@ -200,6 +225,7 @@ export default function CurveEditor({
   const savedCurveData = savedCurve
     ? (() => {
         const totalMonths = savedBaseMonths + extrapolationMonths;
+        const extrapolatedFormatted = savedCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 });
         return [
           {
             x: Array.from(new Array(totalMonths), (x, n) => n + 1 + savedCurveXOffset),
@@ -220,7 +246,7 @@ export default function CurveEditor({
               size: 10,
             },
           },
-          name: "Curva Guardada",
+          name: `Curva Guardada (Extrap: ${extrapolatedFormatted} m³)`,
           visible: true,
           showlegend: true,
         }];
@@ -233,6 +259,7 @@ export default function CurveEditor({
         .map(([name, par]) => {
           // Calculate total months: base months + extrapolation
           const totalMonths = currentBaseMonths + extrapolationMonths;
+          const extrapolatedFormatted = newCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 });
 
           return {
             x: Array.from(new Array(totalMonths), (x, n) => n + 1),
@@ -263,7 +290,7 @@ export default function CurveEditor({
                 size: 10,
               },
             },
-            name: name + " (Nueva Curva)",
+            name: `Nueva Curva (Extrap: ${extrapolatedFormatted} m³)`,
             visible: visibleLines[name],
             showlegend: true,
           };

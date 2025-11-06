@@ -32,6 +32,13 @@ const getLayoutXAxis = (series, zoomRanges) => {
 export default function PeakChart({ series, points, addNewPoint, savedCurve, showNewCurve }) {
   const [logScale, setLogScale] = useState(false);
 
+  // Calculate EUR (Estimated Ultimate Recovery) - total oil produced
+  const calculateEUR = () => {
+    return series.oil.reduce((acc, val) => acc + (val || 0), 0);
+  };
+
+  const eur = calculateEUR();
+
   const initialRanges = {
     oil: {
       x: [0, series.oil.length],
@@ -216,8 +223,14 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve, sho
             l: 30,
             r: 10,
             b: 30,
-            t: 25,
+            t: 40,
             pad: 2,
+          },
+          title: {
+            text: `Producción del Pozo - EUR: ${eur.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³`,
+            font: { size: 11, weight: 'bold' },
+            x: 0.5,
+            xanchor: 'center',
           },
           legend: {
             title: "Curvas",

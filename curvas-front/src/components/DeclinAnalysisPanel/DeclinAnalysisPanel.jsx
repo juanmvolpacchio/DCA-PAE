@@ -165,23 +165,21 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
         </Col>
 
         {/* Columna derecha: Gráficos */}
-        <Col xs={9} className="d-flex flex-column gap-3" style={{ height: '100%' }}>
-          <div style={{ height: '100%', minHeight: 0 }}>
-            <PeakChartPanel
-              series={{
-                oil: wellProdSeries.efec_oil_prod,
-                gas: wellProdSeries.efec_gas_prod,
-                water: wellProdSeries.efec_water_prod,
-                months: wellProdSeries.month,
-              }}
-              points={points}
-              applyPeakFilter={applyPeakFilter}
-              addNewPoint={addNewPoint}
-              savedCurve={savedCurve}
-              showNewCurve={isNewCurveVisible}
-              editableParams={editableParams}
-            />
-          </div>
+        <Col xs={9} style={{ height: '100%', overflowY: 'auto' }}>
+          <PeakChartPanel
+            series={{
+              oil: wellProdSeries.efec_oil_prod,
+              gas: wellProdSeries.efec_gas_prod,
+              water: wellProdSeries.efec_water_prod,
+              months: wellProdSeries.month,
+            }}
+            points={points}
+            applyPeakFilter={applyPeakFilter}
+            addNewPoint={addNewPoint}
+            savedCurve={savedCurve}
+            showNewCurve={isNewCurveVisible}
+            editableParams={editableParams}
+          />
         </Col>
       </Row>
     </Container>

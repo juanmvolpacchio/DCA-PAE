@@ -2,30 +2,47 @@ import { useEffect, useState, useRef } from "react";
 
 import Plot from "react-plotly.js";
 
-const getLayoutXAxis = (series, zoomRanges) => {
-  const total = series.oil.length;
+const getLayoutXAxis = (series, zoomRanges, extrapolationMonths) => {
+  const historicalLength = series.oil.length;
+  const total = historicalLength + extrapolationMonths;
   const maxTicks = 20;
   const step = Math.ceil(total / maxTicks);
+
+  // Generate tick values and labels
+  const tickvals = Array.from({ length: total }, (_, i) => i + 1).filter(
+    (v) => (v - 1) % step === 0
+  );
+
+  const ticktext = tickvals.map((tickval) => {
+    const index = tickval - 1;
+    if (index < historicalLength) {
+      // Historical data - use actual month
+      return new Date(series.months[index]).toLocaleDateString("es-ES", {
+        month: "numeric",
+        year: "numeric",
+      });
+    } else {
+      // Extrapolated months - calculate from last historical month
+      const lastMonth = new Date(series.months[historicalLength - 1]);
+      const monthsAhead = index - historicalLength + 1;
+      const extrapDate = new Date(lastMonth);
+      extrapDate.setMonth(extrapDate.getMonth() + monthsAhead);
+      return extrapDate.toLocaleDateString("es-ES", {
+        month: "numeric",
+        year: "numeric",
+      });
+    }
+  });
 
   return {
     title: "Mes",
     titlefont: { size: 9 },
     tickfont: { size: 7 },
-    range: zoomRanges.oil.x,
+    range: zoomRanges.x,
     automargin: true,
     tickangle: -45,
-    tickvals: Array.from({ length: total }, (_, i) => i + 1).filter(
-      (v) => (v - 1) % step === 0
-    ),
-    ticktext: series.months
-      .filter((_, i) => i % step === 0)
-      //locale to a month and year
-      .map((month) =>
-        new Date(month).toLocaleDateString("es-ES", {
-          month: "numeric",
-          year: "numeric",
-        })
-      ),
+    tickvals: tickvals,
+    ticktext: ticktext,
   };
 };
 
@@ -52,19 +69,12 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve, sho
   const extrapolationMonths = Math.max(editableParams?.["Seg. 1"]?.t || 12, 0);
   const realMaxQo = editableParams?.["Seg. 1"]?.realMaxQo || 1;
 
+  // Calculate the max range including extrapolation
+  const maxXRange = series.oil.length + extrapolationMonths;
+
   const initialRanges = {
-    oil: {
-      x: [0, series.oil.length],
-      y: [0, Math.max(...series.oil) * 1.1],
-    },
-    gas: {
-      x: [0, series.gas.length],
-      y: [0, Math.max(...series.gas) * 1.1],
-    },
-    water: {
-      x: [0, series.water.length],
-      y: [0, Math.max(...series.water) * 1.1],
-    },
+    x: [0, maxXRange],
+    y: [0, Math.max(...series.oil) * 1.1],
   };
 
   const [zoomRanges, setZoomRanges] = useState(initialRanges);
@@ -95,7 +105,7 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve, sho
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  const xaxis = getLayoutXAxis(series, zoomRanges);
+  const xaxis = getLayoutXAxis(series, zoomRanges, extrapolationMonths);
 
   // Generate saved curve data (blue curve)
   const savedCurveData = savedCurve && savedCurve.start_date
@@ -199,7 +209,7 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve, sho
                 size: 10,
               },
             },
-            name: "Oil",
+            name: "Petróleo",
             showlegend: true,
           },
           // Orange point for new curve - only show if Nueva Curva panel is visible
@@ -263,46 +273,6 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve, sho
             },
             showlegend: false,
           },
-          {
-            x: Array.from(new Array(series.gas.length), (x, n) => n + 1),
-            y: series.gas,
-            type: "scatter",
-            mode: "lines",
-            line: {
-              width: 1.4,
-              color: "#888",
-            },
-            opacity: 0.5,
-            hovertemplate: "%{x}: %{y}<extra></extra>",
-            hoverlabel: {
-              font: {
-                size: 10,
-              },
-            },
-            showlegend: true,
-            name: "Gas",
-            yaxis: "y2",
-          },
-          {
-            x: Array.from(new Array(series.water.length), (x, n) => n + 1),
-            y: series.water,
-            type: "scatter",
-            mode: "lines",
-            line: {
-              width: 1.4,
-              color: "#FFaaaa",
-            },
-            opacity: 0.5,
-            hovertemplate: "%{x}: %{y}<extra></extra>",
-            hoverlabel: {
-              font: {
-                size: 10,
-              },
-            },
-            showlegend: true,
-            name: "Agua",
-            yaxis: "y3",
-          },
   ].filter(Boolean);
 
   return (
@@ -322,7 +292,7 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve, sho
             pad: 2,
           },
           title: {
-            text: `Producción del Pozo - EUR: ${eur.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³`,
+            text: `Petróleo - EUR: ${eur.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³`,
             font: { size: 11, weight: 'bold' },
             x: 0.5,
             xanchor: 'center',
@@ -334,32 +304,10 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve, sho
           },
           xaxis: xaxis,
           yaxis: {
-            title: "Oil [m3]",
+            title: "Petróleo [m³]",
             titlefont: { size: 9 },
             tickfont: { size: 7 },
-            range: logScale ? "sarasa" : zoomRanges.oil.y,
-            type: logScale ? "log" : "linear",
-          },
-          yaxis2: {
-            title: "Gas [m3]",
-            titlefont: { size: 8 },
-            tickfont: { size: 6 },
-            overlaying: "y",
-            side: "right",
-            anchor: "free",
-            position: 0.98,
-            range: logScale ? "sarasa" : zoomRanges.gas.y,
-            type: logScale ? "log" : "linear",
-          },
-          yaxis3: {
-            title: "Agua [m3]",
-            titlefont: { size: 8 },
-            tickfont: { size: 6 },
-            overlaying: "y",
-            side: "right",
-            anchor: "free",
-            position: 1,
-            range: logScale ? "sarasa" : zoomRanges.water.y,
+            range: logScale ? "sarasa" : zoomRanges.y,
             type: logScale ? "log" : "linear",
           },
         }}
@@ -373,27 +321,11 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve, sho
           const ranges = newRanges["xaxis.autorange"]
             ? initialRanges
             : {
-                oil: {
-                  x: [newRanges["xaxis.range[0]"], newRanges["xaxis.range[1]"]],
-                  y: [
-                    Math.max(newRanges["yaxis.range[0]"], 0),
-                    newRanges["yaxis.range[1]"],
-                  ],
-                },
-                gas: {
-                  x: [newRanges["xaxis.range[0]"], newRanges["xaxis.range[1]"]],
-                  y: [
-                    Math.max(newRanges["yaxis2.range[0]"], 0),
-                    newRanges["yaxis2.range[1]"],
-                  ],
-                },
-                water: {
-                  x: [newRanges["xaxis.range[0]"], newRanges["xaxis.range[1]"]],
-                  y: [
-                    Math.max(newRanges["yaxis3.range[0]"], 0),
-                    newRanges["yaxis3.range[1]"],
-                  ],
-                },
+                x: [newRanges["xaxis.range[0]"], newRanges["xaxis.range[1]"]],
+                y: [
+                  Math.max(newRanges["yaxis.range[0]"], 0),
+                  newRanges["yaxis.range[1]"],
+                ],
               };
           setZoomRanges(ranges);
         }}

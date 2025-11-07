@@ -5,7 +5,16 @@ export default function SavedCurvePanel({ savedCurve, onEdit, isEditMode }) {
   if (!savedCurve) {
     return (
       <div id="saved-curve-params-panel" className="param-panel">
-        <h3>Curva Guardada</h3>
+        <div className="panel-header">
+          <h3>Curva Guardada</h3>
+          <button
+            className={`edit-button ${isEditMode ? 'active' : ''}`}
+            onClick={onEdit}
+            title={isEditMode ? "Ocultar Nueva Curva" : "Crear Nueva Curva"}
+          >
+            {isEditMode ? '✖️ Cerrar' : '➕ Nueva'}
+          </button>
+        </div>
         <div className="no-saved-curve">
           <p>No hay curva guardada para este pozo</p>
         </div>

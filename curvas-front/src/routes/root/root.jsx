@@ -90,7 +90,7 @@ export default function MainScreen() {
               }}
               style={{ maxWidth: '250px' }}
             >
-              <option value="">Todas las unidades</option>
+              <option value="">Todas las UG</option>
               {managUnits.map((unit) => (
                 <option key={unit} value={unit}>
                   {unit}

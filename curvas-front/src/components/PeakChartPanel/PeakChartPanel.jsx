@@ -2,6 +2,8 @@ import { useState } from "react";
 
 import { getInitialParams } from "../../helpers/paramHelpers";
 import PeakChart from "./PeakChart/PeakChart";
+import GasChart from "./PeakChart/GasChart";
+import WaterChart from "./PeakChart/WaterChart";
 
 export default function PeakChartPanel({
   series,
@@ -33,36 +35,23 @@ export default function PeakChartPanel({
   }
 
   return (
-    <div id="peak-chart-container" className="chart-panel">
-      {/* <div className="param-panel">
-        <h3>Filtro picos</h3>
-        <div className="filter-container">
-          {Object.keys(chartParams).map((par) => {
-            return (
-              <div key={par} className="filter-viewer">
-                <label htmlFor={par}>{chartParams[par]}</label>
-                <input
-                  id={par}
-                  type="number"
-                  step={1}
-                  value={peakParams[par]}
-                  onChange={(e) =>
-                    handleParamsChange(Number(e.target.value), par)
-                  }
-                />
-              </div>
-            );
-          })}
-        </div>
-      </div> */}
-      <PeakChart
-        series={series}
-        points={points}
-        addNewPoint={addNewPoint}
-        savedCurve={savedCurve}
-        showNewCurve={showNewCurve}
-        editableParams={editableParams}
-      />
+    <div id="peak-chart-container" className="chart-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '20px' }}>
+      <div style={{ height: '40vh', minHeight: '300px' }}>
+        <PeakChart
+          series={series}
+          points={points}
+          addNewPoint={addNewPoint}
+          savedCurve={savedCurve}
+          showNewCurve={showNewCurve}
+          editableParams={editableParams}
+        />
+      </div>
+      <div style={{ height: '40vh', minHeight: '300px' }}>
+        <GasChart series={series} />
+      </div>
+      <div style={{ height: '40vh', minHeight: '300px' }}>
+        <WaterChart series={series} />
+      </div>
     </div>
   );
 }

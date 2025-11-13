@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 
 import Plot from "react-plotly.js";
 
@@ -104,6 +104,25 @@ export default function WaterChart({ series, points, addNewPoint, savedCurve, sh
 
   const xaxis = getLayoutXAxis(series, zoomRanges, extrapolationMonths);
 
+  // Calculate R² for saved curve if available
+  const savedCurveR2 = useMemo(() => {
+    if (!savedCurve || !editableParams?.["Seg. 1"]?.seg) return null;
+
+    const realData = editableParams["Seg. 1"].seg;
+    const qo = Number(savedCurve.qo);
+    const dea = Number(savedCurve.dea);
+
+    // Generate predicted values
+    const predicted = realData.map((_, i) => qo * Math.E ** (-dea * i));
+
+    // Calculate R²
+    const mean = realData.reduce((sum, val) => sum + val, 0) / realData.length;
+    const ssRes = realData.reduce((sum, val, i) => sum + Math.pow(val - predicted[i], 2), 0);
+    const ssTot = realData.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0);
+
+    return ssTot === 0 ? 1 : Math.max(0, 1 - (ssRes / ssTot));
+  }, [savedCurve, editableParams]);
+
   // Generate saved curve data (blue curve)
   const savedCurveData = savedCurve && savedCurve.start_date
     ? (() => {
@@ -121,6 +140,7 @@ export default function WaterChart({ series, points, addNewPoint, savedCurve, sh
           Number(savedCurve.dea),
           extrapolationMonths
         );
+        const r2Display = savedCurveR2 !== null ? `, R²: ${savedCurveR2.toFixed(4)}` : '';
 
         return {
           x: Array.from(new Array(totalMonths), (_, n) => n + 1 + startIndex),
@@ -138,7 +158,7 @@ export default function WaterChart({ series, points, addNewPoint, savedCurve, sh
           hoverlabel: {
             font: { size: 10 },
           },
-          name: `Curva Guardada (Extrap: ${savedCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³)`,
+          name: `Curva Guardada (Extrap: ${savedCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³${r2Display})`,
           visible: true,
           showlegend: true,
         };
@@ -162,6 +182,7 @@ export default function WaterChart({ series, points, addNewPoint, savedCurve, sh
           editableParams["Seg. 1"].dea,
           extrapolationMonths
         );
+        const r2Display = editableParams["Seg. 1"].r2 !== undefined ? `, R²: ${editableParams["Seg. 1"].r2.toFixed(4)}` : '';
 
         return {
           x: Array.from(new Array(totalMonths), (_, n) => n + 1 + startIndex),
@@ -179,7 +200,7 @@ export default function WaterChart({ series, points, addNewPoint, savedCurve, sh
           hoverlabel: {
             font: { size: 10 },
           },
-          name: `Nueva Curva (Extrap: ${newCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³)`,
+          name: `Nueva Curva (Extrap: ${newCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³${r2Display})`,
           visible: true,
           showlegend: true,
         };

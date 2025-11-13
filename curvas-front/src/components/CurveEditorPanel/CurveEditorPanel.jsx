@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 
-import { API_BASE, curveParams } from "../../helpers/constants";
+import { API_BASE, curveParams, formatDateToDDMMYYYY } from "../../helpers/constants";
 import { useAuth } from "../../hooks/useAuth";
 import "./CurveEditorPanel.css";
 
@@ -126,7 +126,7 @@ export default function CurveEditorPanel({
               disabled={par === "start_date" || !editableParams[activeSegment]}
               readOnly={par === "start_date"}
               step={par === "dea" ? 0.001 : 0.01}
-              value={editableParams[activeSegment]?.[par] || ""}
+              value={par === "start_date" ? formatDateToDDMMYYYY(editableParams[activeSegment]?.[par]) : (editableParams[activeSegment]?.[par] || "")}
               onChange={(e) =>
                 updateEditableParam(activeSegment, par, e.target.value)
               }

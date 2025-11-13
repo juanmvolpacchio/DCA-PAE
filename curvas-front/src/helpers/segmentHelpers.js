@@ -43,7 +43,8 @@ export function getNormalizedSegments(segments, globalMaxQo = null) {
       const filterSeg2 = filterSeg2WithIndexes.map((s) => s.value);
 
       // NO NORMALIZE - use real values directly
-      const [qo, dea] = exponentialFitter(filterSeg2);
+      const [qo, dea, r2] = exponentialFitter(filterSeg2);
+      console.log(`📊 Seg. ${i + 1} - R²: ${r2?.toFixed(4)}, qo: ${qo}, dea: ${dea}`);
 
       const segIndexes = filterSeg2WithIndexes.map((s) => s.index);
 
@@ -55,6 +56,7 @@ export function getNormalizedSegments(segments, globalMaxQo = null) {
           t: 12, // Default extrapolation months beyond data
           qo: Number(qo.toFixed(2)),
           dea: Number(dea.toFixed(4)),
+          r2: Number(r2.toFixed(4)),
           color: defaultColors[i % defaultColors.length],
           realMaxQo: 1, // No longer needed, set to 1 for compatibility
         },

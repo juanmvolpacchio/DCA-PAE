@@ -227,11 +227,38 @@ export default function CurveEditor({
     return savedStartIndex - currentStartIndex;
   })();
 
+  // Debug logging
+  console.log('🎯 CurveEditor - savedCurve:', savedCurve);
+  console.log('🎯 CurveEditor - showNewCurve:', showNewCurve);
+  console.log('🎯 CurveEditor - editableParams:', editableParams);
+
+  // Calculate R² for saved curve if available
+  const savedCurveR2 = useMemo(() => {
+    if (!savedCurve || !editableParams["Seg. 1"]?.seg) return null;
+
+    const realData = editableParams["Seg. 1"].seg;
+    const qo = Number(savedCurve.qo);
+    const dea = Number(savedCurve.dea);
+
+    // Generate predicted values
+    const predicted = realData.map((_, i) => qo * Math.E ** (-dea * i));
+
+    // Calculate R²
+    const mean = realData.reduce((sum, val) => sum + val, 0) / realData.length;
+    const ssRes = realData.reduce((sum, val, i) => sum + Math.pow(val - predicted[i], 2), 0);
+    const ssTot = realData.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0);
+
+    return ssTot === 0 ? 1 : Math.max(0, 1 - (ssRes / ssTot));
+  }, [savedCurve, editableParams]);
+
   // Generate saved curve data
   const savedCurveData = savedCurve
     ? (() => {
         const totalMonths = savedBaseMonths + extrapolationMonths;
         const extrapolatedFormatted = savedCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 });
+        const r2Display = savedCurveR2 !== null ? `, R²: ${savedCurveR2.toFixed(4)}` : '';
+        const legendName = `Curva Guardada (Extrap: ${extrapolatedFormatted} m³${r2Display})`;
+        console.log('🔵 Saved curve legend:', legendName);
         return [
           {
             x: Array.from(new Array(totalMonths), (x, n) => n + 1 + savedCurveXOffset),
@@ -252,7 +279,7 @@ export default function CurveEditor({
               size: 10,
             },
           },
-          name: `Curva Guardada (Extrap: ${extrapolatedFormatted} m³)`,
+          name: legendName,
           visible: true,
           showlegend: true,
         }];
@@ -266,6 +293,9 @@ export default function CurveEditor({
           // Calculate total months: base months + extrapolation
           const totalMonths = currentBaseMonths + extrapolationMonths;
           const extrapolatedFormatted = newCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 });
+          const r2Display = par.r2 !== undefined ? `, R²: ${par.r2.toFixed(4)}` : '';
+          const legendName = `Nueva Curva (Extrap: ${extrapolatedFormatted} m³${r2Display})`;
+          console.log('🟠 New curve legend:', legendName, 'par.r2:', par.r2);
 
           return {
             x: Array.from(new Array(totalMonths), (x, n) => n + 1),
@@ -296,7 +326,7 @@ export default function CurveEditor({
                 size: 10,
               },
             },
-            name: `Nueva Curva (Extrap: ${extrapolatedFormatted} m³)`,
+            name: legendName,
             visible: visibleLines[name],
             showlegend: true,
           };

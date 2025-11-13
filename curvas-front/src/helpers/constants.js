@@ -4,6 +4,26 @@ export const curveParams = {
   dea: "DEA",
 };
 
+/**
+ * Formats a date string (YYYY-MM-DD) to DD/MM/YYYY format
+ * @param {string} dateString - Date in ISO format (YYYY-MM-DD)
+ * @returns {string} Date in DD/MM/YYYY format
+ */
+export function formatDateToDDMMYYYY(dateString) {
+  if (!dateString) return "";
+
+  const date = new Date(dateString);
+
+  // Check if date is valid
+  if (isNaN(date.getTime())) return dateString;
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+
+  return `${day}/${month}/${year}`;
+}
+
 export const defaultColors = [
   "#1f77b4", // muted blue
   "#ff7f0e", // safety orange

@@ -1,4 +1,4 @@
-import { curveParams } from "../../helpers/constants";
+import { curveParams, formatDateToDDMMYYYY } from "../../helpers/constants";
 import "./SavedCurvePanel.css";
 
 export default function SavedCurvePanel({ savedCurve, onEdit, isEditMode }) {
@@ -49,7 +49,7 @@ export default function SavedCurvePanel({ savedCurve, onEdit, isEditMode }) {
               className="curve-editor-input"
               type={par === "start_date" ? "text" : "number"}
               disabled={true}
-              value={savedCurve[par] || ""}
+              value={par === "start_date" ? formatDateToDDMMYYYY(savedCurve[par]) : (savedCurve[par] || "")}
               readOnly
             />
           </div>

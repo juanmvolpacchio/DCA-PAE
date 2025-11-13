@@ -169,12 +169,11 @@ async function migrateData() {
     let skipCount = 0;
     let errorCount = 0;
 
-    // Get admin user ID (assuming first user is admin)
-    const adminUser = await dbGet(db, "SELECT id FROM user LIMIT 1");
-    const userId = adminUser ? adminUser.id : 1;
+    // Always use user_id = 1 for migrated curves
+    const userId = 1;
 
     for (const entry of jsonData) {
-      const { pozo, fecha_corte, fecha_inyeccion } = entry;
+      const { pozo, fecha_corte, fecha_inyeccion, fecha_evento_buffered, fecha_sist_buffered } = entry;
 
       if (!pozo || !fecha_corte) {
         console.log(`   ⚠ Skipping entry: missing pozo or fecha_corte`);
@@ -186,6 +185,12 @@ async function migrateData() {
       console.log(`     Cut date: ${fecha_corte}`);
       if (fecha_inyeccion) {
         console.log(`     Injection date: ${fecha_inyeccion}`);
+      }
+      if (fecha_evento_buffered) {
+        console.log(`     Event date: ${fecha_evento_buffered}`);
+      }
+      if (fecha_sist_buffered) {
+        console.log(`     System date: ${fecha_sist_buffered}`);
       }
 
       // Check if well exists in database
@@ -237,6 +242,40 @@ async function migrateData() {
       console.log(`     Cut date: ${curveParams.cutDate} → Start date: ${curveParams.start_date}`);
       console.log(`     Data points used: ${curveParams.dataPoints}`);
 
+      // Determine event type based on fecha_corte
+      let eventType = "Desconocido";
+
+      // Helper function to compare dates (ignoring time)
+      const isSameDate = (date1, date2) => {
+        if (!date1 || !date2) return false;
+        const d1 = new Date(date1);
+        const d2 = new Date(date2);
+        return d1.toISOString().split('T')[0] === d2.toISOString().split('T')[0];
+      };
+
+      if (isSameDate(fecha_corte, fecha_evento_buffered)) {
+        eventType = "Intervención";
+      } else if (isSameDate(fecha_corte, fecha_inyeccion)) {
+        eventType = "Inyección";
+      } else if (isSameDate(fecha_corte, fecha_sist_buffered)) {
+        eventType = "Sistema de Extracción";
+      }
+
+      // Format cut date as DD/MM/YYYY
+      const formatDate = (dateStr) => {
+        const date = new Date(dateStr);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      };
+
+      const formattedCutDate = formatDate(fecha_corte);
+      const comment = `Fecha Inicio seleccionada por ${eventType}\nFecha de corte: ${formattedCutDate}`;
+
+      console.log(`     Event type: ${eventType}`);
+      console.log(`     Comment: ${comment.replace('\n', ' | ')}`);
+
       // Save curve to database
       const curveName = "Curva Base Oil";
       const curveId = `${curveName}${pozo}`;
@@ -255,7 +294,7 @@ async function migrateData() {
             curveParams.start_date,
             pozo,
             userId,
-            `Migrated from df_final.json - ${curveParams.usedPeakMethod ? 'Peak method' : 'Next point method'} - Cut date: ${curveParams.cutDate}, ${curveParams.dataPoints} data points`,
+            comment,
             "oil"
           ]
         );

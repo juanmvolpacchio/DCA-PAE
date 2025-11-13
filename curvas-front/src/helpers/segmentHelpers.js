@@ -42,29 +42,21 @@ export function getNormalizedSegments(segments, globalMaxQo = null) {
         .filter((s) => s.value !== undefined);
       const filterSeg2 = filterSeg2WithIndexes.map((s) => s.value);
 
-      const maxQo = Math.max(...filteredSeg);
-      const maxQoOrg = Math.max(...filterSeg2);
-
-      // Use global max if provided, otherwise use local max
-      const normalizationMax = globalMaxQo !== null ? globalMaxQo : maxQoOrg;
-
-      const seg = filteredSeg.map((s) => s / maxQo);
-      const segmentOrg = filterSeg2.map((s) => s / normalizationMax);
-
-      const [qo, dea] = exponentialFitter(seg);
+      // NO NORMALIZE - use real values directly
+      const [qo, dea] = exponentialFitter(filterSeg2);
 
       const segIndexes = filterSeg2WithIndexes.map((s) => s.index);
 
       return [
         `Seg. ${i + 1}`,
         {
-          seg: segmentOrg,
+          seg: filterSeg2,
           segIndexes: segIndexes,
           t: 12, // Default extrapolation months beyond data
-          qo: Number(qo.toFixed(4)),
+          qo: Number(qo.toFixed(2)),
           dea: Number(dea.toFixed(4)),
           color: defaultColors[i % defaultColors.length],
-          realMaxQo: normalizationMax,
+          realMaxQo: 1, // No longer needed, set to 1 for compatibility
         },
       ];
     })

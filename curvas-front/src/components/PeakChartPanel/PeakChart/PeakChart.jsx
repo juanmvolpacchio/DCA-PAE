@@ -56,18 +56,17 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve, sho
 
   const eur = calculateEUR();
 
-  // Helper function to calculate extrapolated oil without normalization
-  const calculateExtrapolatedOil = (qo, dea, months, realMaxQo) => {
+  // Helper function to calculate extrapolated oil with real values
+  const calculateExtrapolatedOil = (qo, dea, months) => {
     let total = 0;
     for (let n = 0; n < months; n++) {
-      total += (qo * Math.E ** (-dea * n)) * realMaxQo;
+      total += qo * Math.E ** (-dea * n);
     }
     return total;
   };
 
   // Get extrapolation parameters
   const extrapolationMonths = Math.max(editableParams?.["Seg. 1"]?.t || 12, 0);
-  const realMaxQo = editableParams?.["Seg. 1"]?.realMaxQo || 1;
 
   // Calculate the max range including extrapolation
   const maxXRange = series.oil.length + extrapolationMonths;
@@ -110,8 +109,10 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve, sho
   // Generate saved curve data (blue curve)
   const savedCurveData = savedCurve && savedCurve.start_date
     ? (() => {
+        // Find the closest production point on or after the start_date
+        const startDate = new Date(savedCurve.start_date);
         const startIndex = series.months.findIndex(month =>
-          new Date(month).getTime() === new Date(savedCurve.start_date).getTime()
+          new Date(month) >= startDate
         );
 
         if (startIndex === -1) return null;
@@ -120,14 +121,13 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve, sho
         const savedCurveExtrapolated = calculateExtrapolatedOil(
           Number(savedCurve.qo),
           Number(savedCurve.dea),
-          extrapolationMonths,
-          realMaxQo
+          extrapolationMonths
         );
 
         return {
           x: Array.from(new Array(totalMonths), (_, n) => n + 1 + startIndex),
           y: Array.from(new Array(totalMonths), (_, n) =>
-            Number(savedCurve.qo) * Math.E ** (-Number(savedCurve.dea) * n) * realMaxQo
+            Number(savedCurve.qo) * Math.E ** (-Number(savedCurve.dea) * n)
           ),
           type: "scatter",
           mode: "lines",
@@ -150,8 +150,10 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve, sho
   // Generate new curve data (orange curve) - only if visible
   const newCurveData = showNewCurve && editableParams?.["Seg. 1"]
     ? (() => {
+        // Find the closest production point on or after the start_date
+        const startDate = new Date(editableParams["Seg. 1"].start_date);
         const startIndex = series.months.findIndex(month =>
-          new Date(month).getTime() === new Date(editableParams["Seg. 1"].start_date).getTime()
+          new Date(month) >= startDate
         );
 
         if (startIndex === -1) return null;
@@ -160,14 +162,13 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve, sho
         const newCurveExtrapolated = calculateExtrapolatedOil(
           editableParams["Seg. 1"].qo,
           editableParams["Seg. 1"].dea,
-          extrapolationMonths,
-          realMaxQo
+          extrapolationMonths
         );
 
         return {
           x: Array.from(new Array(totalMonths), (_, n) => n + 1 + startIndex),
           y: Array.from(new Array(totalMonths), (_, n) =>
-            editableParams["Seg. 1"].qo * Math.E ** (-editableParams["Seg. 1"].dea * n) * realMaxQo
+            editableParams["Seg. 1"].qo * Math.E ** (-editableParams["Seg. 1"].dea * n)
           ),
           type: "scatter",
           mode: "lines",

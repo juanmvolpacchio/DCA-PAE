@@ -162,20 +162,25 @@ export default function CurveEditor({
   // Get extrapolation months (always positive)
   const extrapolationMonths = Math.max(editableParams["Seg. 1"]?.t || 12, 0);
 
-  // Calculate extrapolated oil for saved curve
-  const calculateExtrapolatedOil = (qo, dea, months) => {
+  // Calculate extrapolated oil for curves (normalized values need to be multiplied by realMaxQo)
+  const calculateExtrapolatedOil = (qo, dea, months, realMaxQo) => {
     let total = 0;
     for (let n = 0; n < months; n++) {
-      total += qo * Math.E ** (-dea * n);
+      // qo and dea are normalized, so multiply by realMaxQo to get actual production
+      total += (qo * Math.E ** (-dea * n)) * realMaxQo;
     }
     return total;
   };
+
+  // Get the realMaxQo value for denormalization
+  const realMaxQo = editableParams["Seg. 1"]?.realMaxQo || 1;
 
   const savedCurveExtrapolated = savedCurve
     ? calculateExtrapolatedOil(
         Number(savedCurve.qo),
         Number(savedCurve.dea),
-        extrapolationMonths
+        extrapolationMonths,
+        realMaxQo
       )
     : 0;
 
@@ -183,7 +188,8 @@ export default function CurveEditor({
     ? calculateExtrapolatedOil(
         editableParams["Seg. 1"].qo,
         editableParams["Seg. 1"].dea,
-        extrapolationMonths
+        extrapolationMonths,
+        realMaxQo
       )
     : 0;
 

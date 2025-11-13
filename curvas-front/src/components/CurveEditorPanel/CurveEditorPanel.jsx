@@ -15,6 +15,7 @@ export default function CurveEditorPanel({
   savedCurve,
   activeSegment,
   setActiveSegment,
+  fluidType,
 }) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -35,11 +36,11 @@ export default function CurveEditorPanel({
   console.log('📊 CurveEditorPanel - editableParams:', editableParams);
 
   const saveCurveMutation = useMutation({
-    mutationFn: async ({ name, qo, dea, start_date, well, user_id, comment }) => {
+    mutationFn: async ({ name, qo, dea, start_date, well, user_id, comment, fluid_type }) => {
       const response = await fetch(`${API_BASE}/curves`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, qo, dea, start_date, well, user_id, comment }),
+        body: JSON.stringify({ name, qo, dea, start_date, well, user_id, comment, fluid_type }),
       });
       if (!response.ok) throw new Error("Failed to save curve");
       return response.json();
@@ -84,6 +85,7 @@ export default function CurveEditorPanel({
         well: activeWell.name,
         user_id: user.id,
         comment: comment.trim() || null,
+        fluid_type: fluidType,
       });
     }
   }

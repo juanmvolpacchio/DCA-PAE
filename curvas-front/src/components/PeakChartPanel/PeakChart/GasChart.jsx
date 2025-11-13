@@ -2,10 +2,37 @@ import { useEffect, useState, useRef } from "react";
 
 import Plot from "react-plotly.js";
 
-const getLayoutXAxis = (series, zoomRanges) => {
-  const total = series.gas.length;
+const getLayoutXAxis = (series, zoomRanges, extrapolationMonths) => {
+  const historicalLength = series.gas.length;
+  const total = historicalLength + extrapolationMonths;
   const maxTicks = 20;
   const step = Math.ceil(total / maxTicks);
+
+  // Generate tick values and labels
+  const tickvals = Array.from({ length: total }, (_, i) => i + 1).filter(
+    (v) => (v - 1) % step === 0
+  );
+
+  const ticktext = tickvals.map((tickval) => {
+    const index = tickval - 1;
+    if (index < historicalLength) {
+      // Historical data - use actual month
+      return new Date(series.months[index]).toLocaleDateString("es-ES", {
+        month: "numeric",
+        year: "numeric",
+      });
+    } else {
+      // Extrapolated months - calculate from last historical month
+      const lastMonth = new Date(series.months[historicalLength - 1]);
+      const monthsAhead = index - historicalLength + 1;
+      const extrapDate = new Date(lastMonth);
+      extrapDate.setMonth(extrapDate.getMonth() + monthsAhead);
+      return extrapDate.toLocaleDateString("es-ES", {
+        month: "numeric",
+        year: "numeric",
+      });
+    }
+  });
 
   return {
     title: "Mes",
@@ -14,21 +41,12 @@ const getLayoutXAxis = (series, zoomRanges) => {
     range: zoomRanges.x,
     automargin: true,
     tickangle: -45,
-    tickvals: Array.from({ length: total }, (_, i) => i + 1).filter(
-      (v) => (v - 1) % step === 0
-    ),
-    ticktext: series.months
-      .filter((_, i) => i % step === 0)
-      .map((month) =>
-        new Date(month).toLocaleDateString("es-ES", {
-          month: "numeric",
-          year: "numeric",
-        })
-      ),
+    tickvals: tickvals,
+    ticktext: ticktext,
   };
 };
 
-export default function GasChart({ series }) {
+export default function GasChart({ series, points, addNewPoint, savedCurve, showNewCurve, editableParams }) {
   const [logScale, setLogScale] = useState(false);
 
   // Calculate EUR (Estimated Ultimate Recovery) - total gas produced
@@ -38,8 +56,23 @@ export default function GasChart({ series }) {
 
   const eur = calculateEUR();
 
+  // Helper function to calculate extrapolated gas with real values
+  const calculateExtrapolatedGas = (qo, dea, months) => {
+    let total = 0;
+    for (let n = 0; n < months; n++) {
+      total += qo * Math.E ** (-dea * n);
+    }
+    return total;
+  };
+
+  // Get extrapolation parameters
+  const extrapolationMonths = Math.max(editableParams?.["Seg. 1"]?.t || 12, 0);
+
+  // Calculate the max range including extrapolation
+  const maxXRange = series.gas.length + extrapolationMonths;
+
   const initialRanges = {
-    x: [0, series.gas.length],
+    x: [0, maxXRange],
     y: [0, Math.max(...series.gas) * 1.1],
   };
 
@@ -69,9 +102,94 @@ export default function GasChart({ series }) {
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  const xaxis = getLayoutXAxis(series, zoomRanges);
+  const xaxis = getLayoutXAxis(series, zoomRanges, extrapolationMonths);
 
+  // Generate saved curve data (blue curve)
+  const savedCurveData = savedCurve && savedCurve.start_date
+    ? (() => {
+        // Find the closest production point on or after the start_date
+        const startDate = new Date(savedCurve.start_date);
+        const startIndex = series.months.findIndex(month =>
+          new Date(month) >= startDate
+        );
+
+        if (startIndex === -1) return null;
+
+        const totalMonths = series.months.length - startIndex + extrapolationMonths;
+        const savedCurveExtrapolated = calculateExtrapolatedGas(
+          Number(savedCurve.qo),
+          Number(savedCurve.dea),
+          extrapolationMonths
+        );
+
+        return {
+          x: Array.from(new Array(totalMonths), (_, n) => n + 1 + startIndex),
+          y: Array.from(new Array(totalMonths), (_, n) =>
+            Number(savedCurve.qo) * Math.E ** (-Number(savedCurve.dea) * n)
+          ),
+          type: "scatter",
+          mode: "lines",
+          line: {
+            width: 3,
+            color: "#4A90E2",
+            dash: "solid",
+          },
+          hovertemplate: "Curva Guardada<br>Mes %{x}: %{y:.2f}m³<extra></extra>",
+          hoverlabel: {
+            font: { size: 10 },
+          },
+          name: `Curva Guardada (Extrap: ${savedCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³)`,
+          visible: true,
+          showlegend: true,
+        };
+      })()
+    : null;
+
+  // Generate new curve data (orange curve) - only if visible
+  const newCurveData = showNewCurve && editableParams?.["Seg. 1"]
+    ? (() => {
+        // Find the closest production point on or after the start_date
+        const startDate = new Date(editableParams["Seg. 1"].start_date);
+        const startIndex = series.months.findIndex(month =>
+          new Date(month) >= startDate
+        );
+
+        if (startIndex === -1) return null;
+
+        const totalMonths = series.months.length - startIndex + extrapolationMonths;
+        const newCurveExtrapolated = calculateExtrapolatedGas(
+          editableParams["Seg. 1"].qo,
+          editableParams["Seg. 1"].dea,
+          extrapolationMonths
+        );
+
+        return {
+          x: Array.from(new Array(totalMonths), (_, n) => n + 1 + startIndex),
+          y: Array.from(new Array(totalMonths), (_, n) =>
+            editableParams["Seg. 1"].qo * Math.E ** (-editableParams["Seg. 1"].dea * n)
+          ),
+          type: "scatter",
+          mode: "lines",
+          line: {
+            width: 3,
+            color: "#FF8C42",
+            dash: "dash",
+          },
+          hovertemplate: "Nueva Curva<br>Mes %{x}: %{y:.2f}m³<extra></extra>",
+          hoverlabel: {
+            font: { size: 10 },
+          },
+          name: `Nueva Curva (Extrap: ${newCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³)`,
+          visible: true,
+          showlegend: true,
+        };
+      })()
+    : null;
+
+  // Prepare data array and filter out null values
   const plotData = [
+    savedCurveData,
+    newCurveData,
     {
       x: Array.from(new Array(series.gas.length), (x, n) => n + 1),
       y: series.gas,
@@ -92,6 +210,67 @@ export default function GasChart({ series }) {
       },
       name: "Gas",
       showlegend: true,
+    },
+    // Orange point for new curve - only show if Nueva Curva panel is visible
+    showNewCurve ? {
+      x: Array.from(new Array(series.gas.length), (x, n) => n + 1),
+      y: series.gas.map((qo, i) =>
+        points[i] === "peak" ? qo : undefined
+      ),
+      type: "scatter",
+      mode: "markers",
+      marker: {
+        color: "#FF8C42",
+        size: 8,
+      },
+      hovertemplate: "Nueva Curva: (%{x},%{y})<extra></extra>",
+      hoverlabel: {
+        font: {
+          size: 8,
+        },
+      },
+      showlegend: false,
+    } : null,
+    // Blue point for saved curve
+    savedCurve && savedCurve.start_date ? {
+      x: [series.months.findIndex(month =>
+        new Date(month).getTime() === new Date(savedCurve.start_date).getTime()
+      ) + 1],
+      y: [series.gas[series.months.findIndex(month =>
+        new Date(month).getTime() === new Date(savedCurve.start_date).getTime()
+      )]],
+      type: "scatter",
+      mode: "markers",
+      marker: {
+        color: "#4A90E2",
+        size: 8,
+      },
+      hovertemplate: "Curva Guardada: (%{x},%{y})<extra></extra>",
+      hoverlabel: {
+        font: {
+          size: 8,
+        },
+      },
+      showlegend: false,
+    } : null,
+    {
+      x: Array.from(new Array(series.gas.length), (x, n) => n + 1),
+      y: series.gas.map((qo, i) =>
+        points[i] === "limit" ? qo : undefined
+      ),
+      type: "scatter",
+      mode: "markers",
+      marker: {
+        color: "black",
+        size: 7,
+      },
+      hovertemplate: "Límite: (%{x},%{y})<extra></extra>",
+      hoverlabel: {
+        font: {
+          size: 8,
+        },
+      },
+      showlegend: false,
     },
   ].filter(Boolean);
 
@@ -118,6 +297,7 @@ export default function GasChart({ series }) {
             xanchor: 'center',
           },
           legend: {
+            title: "Curvas",
             font: { size: 8 },
             orientation: "v",
           },
@@ -129,6 +309,12 @@ export default function GasChart({ series }) {
             range: logScale ? "sarasa" : zoomRanges.y,
             type: logScale ? "log" : "linear",
           },
+        }}
+        onClick={(e) => {
+          const typePoint = e.event.button === 2 ? "limit" : "peak";
+          const pointIndex = e.points[0].x - 1;
+          const start_date = series.months[pointIndex];
+          addNewPoint(typePoint, pointIndex, start_date);
         }}
         onRelayout={(newRanges) => {
           const ranges = newRanges["xaxis.autorange"]

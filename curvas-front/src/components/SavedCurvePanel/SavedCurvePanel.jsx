@@ -61,6 +61,20 @@ export default function SavedCurvePanel({ savedCurve, onEdit, isEditMode }) {
           <div className="comment-display">{savedCurve.comment}</div>
         </div>
       )}
+      {(savedCurve.username || savedCurve.created_at) && (
+        <div className="curve-signature">
+          {savedCurve.username && <span>{savedCurve.username}</span>}
+          {savedCurve.created_at && (
+            <span>
+              {new Date(savedCurve.created_at).toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+              })}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

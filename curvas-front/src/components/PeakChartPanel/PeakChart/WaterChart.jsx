@@ -202,7 +202,13 @@ export default function WaterChart({ series, points, addNewPoint, savedCurve, sh
         width: 2,
         color: "#FFaaaa",
       },
-      hovertemplate: "%{x}: %{y}<extra></extra>",
+      customdata: series.months.map(month =>
+        new Date(month).toLocaleDateString("es-ES", {
+          month: "numeric",
+          year: "numeric",
+        })
+      ),
+      hovertemplate: "%{customdata}: %{y:.2f} m³<extra></extra>",
       hoverlabel: {
         font: {
           size: 10,

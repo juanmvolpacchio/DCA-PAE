@@ -202,7 +202,13 @@ export default function GasChart({ series, points, addNewPoint, savedCurve, show
         width: 2,
         color: "#888",
       },
-      hovertemplate: "%{x}: %{y}<extra></extra>",
+      customdata: series.months.map(month =>
+        new Date(month).toLocaleDateString("es-ES", {
+          month: "numeric",
+          year: "numeric",
+        })
+      ),
+      hovertemplate: "%{customdata}: %{y:.2f} m³<extra></extra>",
       hoverlabel: {
         font: {
           size: 10,

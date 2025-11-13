@@ -305,9 +305,12 @@ export default function PeakChart({ series, points, addNewPoint, savedCurve, sho
             xanchor: 'center',
           },
           legend: {
-            title: "Curvas",
             font: { size: 8 },
-            orientation: "v",
+            orientation: "h",
+            x: 0.5,
+            xanchor: "center",
+            y: -0.15,
+            yanchor: "top",
           },
           xaxis: xaxis,
           yaxis: {

@@ -303,9 +303,12 @@ export default function GasChart({ series, points, addNewPoint, savedCurve, show
             xanchor: 'center',
           },
           legend: {
-            title: "Curvas",
             font: { size: 8 },
-            orientation: "v",
+            orientation: "h",
+            x: 0.5,
+            xanchor: "center",
+            y: -0.15,
+            yanchor: "top",
           },
           xaxis: xaxis,
           yaxis: {

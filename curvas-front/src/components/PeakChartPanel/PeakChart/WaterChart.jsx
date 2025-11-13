@@ -303,9 +303,12 @@ export default function WaterChart({ series, points, addNewPoint, savedCurve, sh
             xanchor: 'center',
           },
           legend: {
-            title: "Curvas",
             font: { size: 8 },
-            orientation: "v",
+            orientation: "h",
+            x: 0.5,
+            xanchor: "center",
+            y: -0.15,
+            yanchor: "top",
           },
           xaxis: xaxis,
           yaxis: {

@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Outlet, useNavigate, useParams } from "react-router-dom";
-import { Container, Navbar, Form } from "react-bootstrap";
+import { Container, Navbar, Form, Button } from "react-bootstrap";
 import { API_BASE } from "../../helpers/constants";
 import { useAuth } from "../../hooks/useAuth";
 import { useWell } from "../../hooks/useWell";
 
 // import logo from '/src/assets/icon.png';
 import LoginButton from "../../components/LoginButton/LoginButton";
+import WellSelectorModal from "../../components/WellSelectorModal/WellSelectorModal";
 import "./root.css";
 
 export default function MainScreen() {
@@ -19,6 +20,7 @@ export default function MainScreen() {
   const [managUnit, setManagUnit] = useState("");
   const [project, setProject] = useState(projectName || "");
   const [selectedWell, setSelectedWell] = useState(wellNames || "");
+  const [showWellModal, setShowWellModal] = useState(false);
 
   const { data: wellsData } = useQuery({
     queryKey: ["wells"],
@@ -64,13 +66,25 @@ export default function MainScreen() {
         (project === "" || w.proyecto === project)
     );
 
-  // Handle well selection
-  const handleWellChange = (e) => {
-    const wellName = e.target.value;
-    setSelectedWell(wellName);
-    if (wellName && project) {
-      navigate(`/project/${project}/wells/${wellName}`);
+  // Handle well selection from modal
+  const handleWellSelectionConfirm = (selectedWells) => {
+    if (selectedWells.length > 0 && project) {
+      const wellsParam = selectedWells.join(',');
+      setSelectedWell(wellsParam);
+      navigate(`/project/${project}/wells/${wellsParam}`);
     }
+  };
+
+  // Get button text based on selection
+  const getWellButtonText = () => {
+    if (!selectedWell) {
+      return "Seleccionar pozos";
+    }
+    const wellCount = selectedWell.split(',').length;
+    if (wellCount === 1) {
+      return selectedWell;
+    }
+    return `${wellCount} pozos seleccionados`;
   };
 
   // Get unique management units
@@ -128,18 +142,14 @@ export default function MainScreen() {
               ))}
             </Form.Select>
 
-            <Form.Select
-              value={selectedWell}
-              onChange={handleWellChange}
-              style={{ maxWidth: '250px' }}
+            <Button
+              variant="outline-primary"
+              onClick={() => setShowWellModal(true)}
+              disabled={!project}
+              style={{ minWidth: '200px' }}
             >
-              <option value="">Seleccione un pozo</option>
-              {filteredWells.map((w) => (
-                <option key={w.name} value={w.name}>
-                  {w.name}
-                </option>
-              ))}
-            </Form.Select>
+              {getWellButtonText()}
+            </Button>
           </div>
           <LoginButton />
         </Container>
@@ -147,6 +157,14 @@ export default function MainScreen() {
       <Container fluid className="h-100 p-0">
         <Outlet context={{ user, activeWell }} />
       </Container>
+
+      <WellSelectorModal
+        show={showWellModal}
+        onHide={() => setShowWellModal(false)}
+        wells={filteredWells}
+        onConfirm={handleWellSelectionConfirm}
+        initialSelected={selectedWell ? selectedWell.split(',') : []}
+      />
     </>
   );
 }

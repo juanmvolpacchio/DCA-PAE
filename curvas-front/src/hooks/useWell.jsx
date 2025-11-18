@@ -3,23 +3,27 @@ import { useParams } from "react-router-dom";
 import { API_BASE } from "../helpers/constants";
 
 export function useWell() {
-  const { well } = useParams();
+  const { wellNames } = useParams();
+
+  // Only fetch well data if it's a single well (not multiple)
+  const isSingleWell = wellNames && !wellNames.includes(',');
+  const wellName = isSingleWell ? wellNames : null;
 
   const {
     data: wellData,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["well", well],
+    queryKey: ["well", wellName],
     queryFn: async () => {
       const response = await fetch(
-        `${API_BASE}/wells/${encodeURIComponent(well)}`
+        `${API_BASE}/wells/${encodeURIComponent(wellName)}`
       );
       if (!response.ok) throw new Error("Failed to load well data");
       const json = await response.json();
       return json.well;
     },
-    enabled: Boolean(well),
+    enabled: Boolean(wellName),
     staleTime: 60_000,
   });
 
@@ -27,6 +31,6 @@ export function useWell() {
     well: wellData,
     isLoading,
     error,
-    wellName: well,
+    wellName: wellName,
   };
 }

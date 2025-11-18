@@ -20,7 +20,7 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
 
   // Only fetch saved curves for single well
   const isSingleWell = wellNames && !wellNames.includes(',');
-  const { data: wellSavedCurves } = useQuery({
+  const { data: wellSavedCurves, isLoading: isLoadingCurves } = useQuery({
     queryKey: ["well", wellNames, "curves"],
     queryFn: async () => {
       const res = await fetch(
@@ -141,7 +141,7 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
     setIsNewCurveVisibleOil(false);
     setIsNewCurveVisibleGas(false);
     setIsNewCurveVisibleWater(false);
-  }, [well]);
+  }, [wellNames]);
 
   // Functions to reset editable params to saved curve for each fluid type
   function handleResetToSavedOil() {
@@ -217,7 +217,7 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
   // Trigger re-render on well change
 
   const [chartRerenderer, setChartRerender] = useState("init");
-  useEffect(() => setChartRerender(well), [well]);
+  useEffect(() => setChartRerender(wellNames), [wellNames]);
 
   // Get activeSegment state to pass to CurveEditor for each fluid type
   const [activeSegmentOil, setActiveSegmentOil] = useState(
@@ -230,12 +230,26 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
     Object.keys(editableParamsWater)[0]
   );
 
-  if (wellSavedCurves === undefined) {
+  // Only show loading for single wells waiting for saved curves
+  if (isSingleWell && isLoadingCurves) {
     return "Loading...";
   }
 
+  // Calculate display title
+  const getDisplayTitle = () => {
+    if (!wellNames) return "";
+    const wellCount = wellNames.split(',').length;
+    if (wellCount === 1) {
+      return wellNames;
+    }
+    return `Mostrando acumulado (${wellCount} pozos)`;
+  };
+
   return (
     <Container fluid className="h-100 py-3">
+      {wellNames && (
+        <h4 className="mb-3">{getDisplayTitle()}</h4>
+      )}
       <PeakChartPanel
         series={{
           oil: wellProdSeries.efec_oil_prod,

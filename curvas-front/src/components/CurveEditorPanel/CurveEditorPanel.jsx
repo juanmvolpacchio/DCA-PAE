@@ -47,7 +47,7 @@ export default function CurveEditorPanel({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["well", activeWell.name, "curves"],
+        queryKey: ["well", activeWell?.name, "curves"],
       });
       setComment(""); // Clear comment after successful save
     },
@@ -69,20 +69,20 @@ export default function CurveEditorPanel({
       );
       setActiveSegment(nextActiveSegmentName);
       queryClient.invalidateQueries({
-        queryKey: ["well", activeWell.name, "curves"],
+        queryKey: ["well", activeWell?.name, "curves"],
       });
     },
   });
 
   async function handleCurveSaving() {
-    if (user?.role === "admin" || user?.id === activeWell.owner) {
+    if (user?.role === "admin" || user?.id === activeWell?.owner) {
       const { qo, dea, start_date } = editableParams[activeSegment];
       saveCurveMutation.mutate({
         name: activeSegment,
         qo,
         dea,
         start_date,
-        well: activeWell.name,
+        well: activeWell?.name,
         user_id: user.id,
         comment: comment.trim() || null,
         fluid_type: fluidType,
@@ -91,10 +91,10 @@ export default function CurveEditorPanel({
   }
 
   async function handleCurveDeleting() {
-    if (user?.role === "admin" || user?.id === activeWell.owner) {
+    if (user?.role === "admin" || user?.id === activeWell?.owner) {
       deleteCurveMutation.mutate({
         name: activeSegment,
-        well: activeWell.name,
+        well: activeWell?.name,
       });
     }
   }
@@ -166,7 +166,7 @@ export default function CurveEditorPanel({
           onChange={(e) => setComment(e.target.value)}
           placeholder="Agregar comentario..."
           disabled={
-            !(user?.role === "admin" || user?.id === activeWell.owner)
+            !(user?.role === "admin" || user?.id === activeWell?.owner)
           }
         />
       </div>
@@ -174,7 +174,7 @@ export default function CurveEditorPanel({
         <button
           className="reset-button"
           disabled={
-            !(user?.role === "admin" || user?.id === activeWell.owner) ||
+            !(user?.role === "admin" || user?.id === activeWell?.owner) ||
             !savedCurve
           }
           onClick={handleReset}
@@ -185,7 +185,7 @@ export default function CurveEditorPanel({
         <button
           className="save-button"
           disabled={
-            !(user?.role === "admin" || user?.id === activeWell.owner)
+            !(user?.role === "admin" || user?.id === activeWell?.owner)
           }
           onClick={handleCurveSaving}
           title="Guardar curva"

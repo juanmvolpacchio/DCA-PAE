@@ -1,0 +1,30 @@
+.well-selector-modal .modal-dialog {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.well-selector-modal .modal-content {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.well-selector-modal .modal-body {
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+}
+
+.wells-list {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 1rem;
+  min-height: 0;
+}
+
+.wells-list .form-check {
+  margin-bottom: 0.5rem;
+}

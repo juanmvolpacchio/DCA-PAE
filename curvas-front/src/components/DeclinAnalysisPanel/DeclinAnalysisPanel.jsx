@@ -15,19 +15,22 @@ import PeakChartPanel from "../PeakChartPanel/PeakChartPanel";
 import { API_BASE } from "../../helpers/constants";
 
 export default function DeclinAnalysisPanel({ wellProdSeries }) {
-  const { well } = useParams();
+  const { wellNames } = useParams();
   const { well: activeWell } = useWell();
+
+  // Only fetch saved curves for single well
+  const isSingleWell = wellNames && !wellNames.includes(',');
   const { data: wellSavedCurves } = useQuery({
-    queryKey: ["well", well, "curves"],
+    queryKey: ["well", wellNames, "curves"],
     queryFn: async () => {
       const res = await fetch(
-        `${API_BASE}/wells/${encodeURIComponent(well)}/curves`
+        `${API_BASE}/wells/${encodeURIComponent(wellNames)}/curves`
       );
       if (!res.ok) throw new Error("Failed to load well curves");
       const json = await res.json();
       return json.curves;
     },
-    enabled: Boolean(well),
+    enabled: isSingleWell,
     staleTime: 60_000,
   });
 

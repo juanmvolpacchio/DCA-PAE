@@ -9,6 +9,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import MainScreen from "./routes/root/root";
 
 import WellScreen from "./routes/well/well";
+import ProjectAnalysis from "./routes/project/project";
 
 const router = createHashRouter([
   {
@@ -17,8 +18,18 @@ const router = createHashRouter([
     element: <MainScreen />,
     children: [
       {
-        id: "well",
-        path: ":well",
+        id: "project-analysis",
+        path: "project/:projectName",
+        element: <ProjectAnalysis />,
+      },
+      {
+        id: "project-wells-all",
+        path: "project/:projectName/wells",
+        element: <WellScreen />,
+      },
+      {
+        id: "project-wells-specific",
+        path: "project/:projectName/wells/:wellNames",
         element: <WellScreen />,
       },
     ],

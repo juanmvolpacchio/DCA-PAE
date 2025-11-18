@@ -18,7 +18,8 @@
     "react-dom": "^19.1.1",
     "react-plotly.js": "^2.6.0",
     "react-router-dom": "^6.21.3",
-    "regression": "^2.0.1"
+    "regression": "^2.0.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

@@ -16,6 +16,8 @@ const getAllWellsProd = require("./actions/getAllWellsProd");
 const getWell = require("./actions/getwell");
 const getWellProd = require("./actions/getwellprod");
 const getWellSavedCurves = require("./actions/getwellsavedcurves");
+const getProjectAnalysis = require("./actions/getprojectanalysis");
+const getProjectWellsProd = require("./actions/getprojectwellsprod");
 
 // Auth
 router.post("/login", login);
@@ -31,5 +33,10 @@ router.get("/wells/:well", getWell);
 router.get("/wells/:wellsprod", getAllWellsProd);
 router.get("/wells/:well/prod", getWellProd);
 router.get("/wells/:well/curves", getWellSavedCurves);
+
+// Projects
+router.get("/projects/:projectName/analysis", getProjectAnalysis);
+router.get("/projects/:projectName/wells/prod", getProjectWellsProd);
+router.get("/projects/:projectName/wells/:wellNames/prod", getProjectWellsProd);
 
 module.exports = router;

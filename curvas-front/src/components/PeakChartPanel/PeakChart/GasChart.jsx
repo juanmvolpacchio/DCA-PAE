@@ -318,7 +318,7 @@ export default function GasChart({ series, points, addNewPoint, savedCurve, show
             pad: 2,
           },
           title: {
-            text: `Gaasasdsads - EUR: ${eur.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³`,
+            text: `Gas - EUR: ${eur.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³`,
             font: { size: 11, weight: 'bold' },
             x: 0.5,
             xanchor: 'center',

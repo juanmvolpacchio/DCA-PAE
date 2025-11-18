@@ -1,0 +1,7 @@
+Pantalla nueva a nivel proyecto que muestre todos los pozos del proyecto en una tabla con una columna que sea el valor esperado de petroleo extrapolado en este mes
+
+ultima fila con total
+
+boton de descargar como EXCEL
+
+

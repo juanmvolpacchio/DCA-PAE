@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Outlet, useNavigate, useParams } from "react-router-dom";
 import { Container, Navbar, Form } from "react-bootstrap";
@@ -12,13 +12,13 @@ import "./root.css";
 
 export default function MainScreen() {
   const { user } = useAuth();
-  const { well } = useParams();
+  const { projectName, wellNames } = useParams();
   const { well: activeWell } = useWell();
   const navigate = useNavigate();
 
   const [managUnit, setManagUnit] = useState("");
-  const [project, setProject] = useState("");
-  const [selectedWell, setSelectedWell] = useState(well || "");
+  const [project, setProject] = useState(projectName || "");
+  const [selectedWell, setSelectedWell] = useState(wellNames || "");
 
   const { data: wellsData } = useQuery({
     queryKey: ["wells"],
@@ -30,6 +30,16 @@ export default function MainScreen() {
     },
     staleTime: 60_000,
   });
+
+  // Sync project and well state with URL
+  useEffect(() => {
+    if (projectName && projectName !== project) {
+      setProject(projectName);
+    }
+    if (wellNames && wellNames !== selectedWell) {
+      setSelectedWell(wellNames);
+    }
+  }, [projectName, wellNames]);
 
   const wells = (wellsData || []).toSorted((w1, w2) => {
     // Check if the 'name' property exists on both objects
@@ -58,8 +68,8 @@ export default function MainScreen() {
   const handleWellChange = (e) => {
     const wellName = e.target.value;
     setSelectedWell(wellName);
-    if (wellName) {
-      navigate(`/${wellName}`);
+    if (wellName && project) {
+      navigate(`/project/${project}/wells/${wellName}`);
     }
   };
 
@@ -101,8 +111,12 @@ export default function MainScreen() {
             <Form.Select
               value={project}
               onChange={(e) => {
-                setProject(e.target.value);
+                const selectedProject = e.target.value;
+                setProject(selectedProject);
                 setSelectedWell("");
+                if (selectedProject) {
+                  navigate(`/project/${selectedProject}`);
+                }
               }}
               style={{ maxWidth: '250px' }}
             >

@@ -12,6 +12,8 @@ export default function ProjectAnalysis() {
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
   const [mesesExtrapolacion, setMesesExtrapolacion] = useState(1);
+  const [sortBy, setSortBy] = useState("deltaPercent");
+  const [sortOrder, setSortOrder] = useState("desc");
 
   // Fetch project analysis data
   const { data, isLoading, error } = useQuery({
@@ -101,15 +103,86 @@ export default function ProjectAnalysis() {
     setFechaHasta(newFechaHasta);
   };
 
+  // Calculate delta percent for each well and add to data
+  const wellsWithDeltaPercent = data?.wells?.map(well => {
+    const deltaPercent = well.volumeProduced !== 0
+      ? Math.abs((well.volumeExtrapolated - well.volumeProduced) / well.volumeProduced * 100)
+      : 0;
+    return { ...well, deltaPercent };
+  }) || [];
+
+  // Sort wells
+  const sortedWells = [...wellsWithDeltaPercent].sort((a, b) => {
+    let aValue, bValue;
+
+    switch (sortBy) {
+      case "well":
+        aValue = a.well;
+        bValue = b.well;
+        break;
+      case "volumeProduced":
+        aValue = a.volumeProduced;
+        bValue = b.volumeProduced;
+        break;
+      case "volumeExtrapolated":
+        aValue = a.volumeExtrapolated;
+        bValue = b.volumeExtrapolated;
+        break;
+      case "delta":
+        aValue = a.delta;
+        bValue = b.delta;
+        break;
+      case "deltaPercent":
+        aValue = a.deltaPercent;
+        bValue = b.deltaPercent;
+        break;
+      default:
+        return 0;
+    }
+
+    if (sortBy === "well") {
+      // String comparison
+      return sortOrder === "asc"
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    } else {
+      // Numeric comparison
+      return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
+    }
+  });
+
   // Calculate totals
-  const totals = data?.wells?.reduce(
+  const totals = wellsWithDeltaPercent.reduce(
     (acc, well) => ({
       volumeProduced: acc.volumeProduced + well.volumeProduced,
       volumeExtrapolated: acc.volumeExtrapolated + well.volumeExtrapolated,
       delta: acc.delta + well.delta,
     }),
     { volumeProduced: 0, volumeExtrapolated: 0, delta: 0 }
-  ) || { volumeProduced: 0, volumeExtrapolated: 0, delta: 0 };
+  );
+
+  // Calculate total delta percent
+  const totalDeltaPercent = totals.volumeProduced !== 0
+    ? Math.abs((totals.volumeExtrapolated - totals.volumeProduced) / totals.volumeProduced * 100)
+    : 0;
+
+  // Handle column sort
+  const handleSort = (column) => {
+    if (sortBy === column) {
+      // Toggle sort order if clicking the same column
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      // Set new column and default to descending
+      setSortBy(column);
+      setSortOrder("desc");
+    }
+  };
+
+  // Get sort icon
+  const getSortIcon = (column) => {
+    if (sortBy !== column) return "⇅";
+    return sortOrder === "asc" ? "↑" : "↓";
+  };
 
   // Export to Excel
   const handleExportToExcel = () => {
@@ -126,15 +199,16 @@ export default function ProjectAnalysis() {
       [`Recurso: ${fluidLabels[fluidType]}`],
       [`Período: ${fechaDesde} a ${fechaHasta}`],
       [],
-      ["Pozo", "Volumen Extraído", "Volumen Extrapolado", "Delta"],
-      ...data.wells.map((well) => [
+      ["Pozo", "Volumen Producido", "Volumen Potencial", "Delta", "Delta %"],
+      ...sortedWells.map((well) => [
         well.well,
         well.volumeProduced,
         well.volumeExtrapolated,
         well.delta,
+        well.deltaPercent.toFixed(2),
       ]),
       [],
-      ["TOTAL", totals.volumeProduced, totals.volumeExtrapolated, totals.delta],
+      ["TOTAL", totals.volumeProduced, totals.volumeExtrapolated, totals.delta, totalDeltaPercent.toFixed(2)],
     ];
 
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
@@ -200,7 +274,7 @@ export default function ProjectAnalysis() {
             </Col>
 
             <Col md={3}>
-              <Form.Label>Meses Extrapolación</Form.Label>
+              <Form.Label>Meses Potencial</Form.Label>
               <Form.Control
                 type="number"
                 min="1"
@@ -234,10 +308,76 @@ export default function ProjectAnalysis() {
           <Table striped bordered hover responsive>
             <thead>
               <tr>
-                <th>Pozo</th>
-                <th className="text-end">Volumen Extraído</th>
-                <th className="text-end">Volumen Extrapolado</th>
-                <th className="text-end">Delta</th>
+                <th>
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>Pozo</span>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="p-0 ms-2"
+                      onClick={() => handleSort("well")}
+                      title="Ordenar por Pozo"
+                    >
+                      {getSortIcon("well")}
+                    </Button>
+                  </div>
+                </th>
+                <th className="text-end">
+                  <div className="d-flex align-items-center justify-content-end">
+                    <span>Volumen Producido</span>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="p-0 ms-2"
+                      onClick={() => handleSort("volumeProduced")}
+                      title="Ordenar por Volumen Producido"
+                    >
+                      {getSortIcon("volumeProduced")}
+                    </Button>
+                  </div>
+                </th>
+                <th className="text-end">
+                  <div className="d-flex align-items-center justify-content-end">
+                    <span>Volumen Potencial</span>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="p-0 ms-2"
+                      onClick={() => handleSort("volumeExtrapolated")}
+                      title="Ordenar por Volumen Potencial"
+                    >
+                      {getSortIcon("volumeExtrapolated")}
+                    </Button>
+                  </div>
+                </th>
+                <th className="text-end">
+                  <div className="d-flex align-items-center justify-content-end">
+                    <span>Delta</span>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="p-0 ms-2"
+                      onClick={() => handleSort("delta")}
+                      title="Ordenar por Delta"
+                    >
+                      {getSortIcon("delta")}
+                    </Button>
+                  </div>
+                </th>
+                <th className="text-end">
+                  <div className="d-flex align-items-center justify-content-end">
+                    <span>Delta %</span>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="p-0 ms-2"
+                      onClick={() => handleSort("deltaPercent")}
+                      title="Ordenar por Delta %"
+                    >
+                      {getSortIcon("deltaPercent")}
+                    </Button>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -265,8 +405,14 @@ export default function ProjectAnalysis() {
                     maximumFractionDigits: 2,
                   })}
                 </td>
+                <td className="text-end">
+                  {totalDeltaPercent.toLocaleString("es-AR", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}%
+                </td>
               </tr>
-              {data.wells.map((well) => (
+              {sortedWells.map((well) => (
                 <tr key={well.well}>
                   <td>
                     <div className="d-flex align-items-center gap-2">
@@ -303,6 +449,12 @@ export default function ProjectAnalysis() {
                       maximumFractionDigits: 2,
                     })}
                   </td>
+                  <td className="text-end">
+                    {well.deltaPercent.toLocaleString("es-AR", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}%
+                  </td>
                 </tr>
               ))}
               <tr className="table-secondary fw-bold">
@@ -328,6 +480,12 @@ export default function ProjectAnalysis() {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
+                </td>
+                <td className="text-end">
+                  {totalDeltaPercent.toLocaleString("es-AR", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}%
                 </td>
               </tr>
             </tbody>

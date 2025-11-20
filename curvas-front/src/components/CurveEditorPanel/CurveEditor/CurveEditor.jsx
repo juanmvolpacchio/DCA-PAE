@@ -257,7 +257,7 @@ export default function CurveEditor({
         const totalMonths = savedBaseMonths + extrapolationMonths;
         const extrapolatedFormatted = savedCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 });
         const r2Display = savedCurveR2 !== null ? `, R²: ${savedCurveR2.toFixed(4)}` : '';
-        const legendName = `Curva Guardada (Extrap: ${extrapolatedFormatted} m³${r2Display})`;
+        const legendName = `Curva Guardada (Potencial: ${extrapolatedFormatted} m³${r2Display})`;
         console.log('🔵 Saved curve legend:', legendName);
         return [
           {
@@ -294,7 +294,7 @@ export default function CurveEditor({
           const totalMonths = currentBaseMonths + extrapolationMonths;
           const extrapolatedFormatted = newCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 });
           const r2Display = par.r2 !== undefined ? `, R²: ${par.r2.toFixed(4)}` : '';
-          const legendName = `Nueva Curva (Extrap: ${extrapolatedFormatted} m³${r2Display})`;
+          const legendName = `Nueva Curva (Potencial: ${extrapolatedFormatted} m³${r2Display})`;
           console.log('🟠 New curve legend:', legendName, 'par.r2:', par.r2);
 
           return {

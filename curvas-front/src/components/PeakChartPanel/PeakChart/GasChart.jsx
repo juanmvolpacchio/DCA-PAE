@@ -158,7 +158,7 @@ export default function GasChart({ series, points, addNewPoint, savedCurve, show
           hoverlabel: {
             font: { size: 10 },
           },
-          name: `Curva Guardada (Extrap: ${savedCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³${r2Display})`,
+          name: `Curva Guardada (Potencial: ${savedCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³${r2Display})`,
           visible: true,
           showlegend: true,
         };
@@ -200,7 +200,7 @@ export default function GasChart({ series, points, addNewPoint, savedCurve, show
           hoverlabel: {
             font: { size: 10 },
           },
-          name: `Nueva Curva (Extrap: ${newCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³${r2Display})`,
+          name: `Nueva Curva (Potencial: ${newCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³${r2Display})`,
           visible: true,
           showlegend: true,
         };

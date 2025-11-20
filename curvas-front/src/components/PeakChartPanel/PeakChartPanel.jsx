@@ -52,6 +52,8 @@ export default function PeakChartPanel({
   // Common props
   wellProdSeries,
   activeWell,
+  // Multiple wells flag
+  isSingleWell,
 }) {
   const chartParams = {
     minHeight: "Altura",
@@ -77,7 +79,7 @@ export default function PeakChartPanel({
     <div id="peak-chart-container" className="chart-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '20px', width: '100%', overflowX: 'hidden' }}>
       {/* Row 1: Oil Graph + Panels */}
       <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', alignItems: 'flex-start', width: '100%' }}>
-        <div style={{ width: 'calc(50% - 10px)', flexShrink: 0, height: '40vh', minHeight: '300px' }}>
+        <div style={{ width: isSingleWell ? 'calc(50% - 10px)' : '100%', flexShrink: 0, height: '40vh', minHeight: '300px' }}>
           <PeakChart
             series={series}
             points={pointsOil}
@@ -87,35 +89,39 @@ export default function PeakChartPanel({
             editableParams={editableParamsOil}
           />
         </div>
-        <div style={{ width: 'calc(25% - 5px)', flexShrink: 0 }}>
-          <SavedCurvePanel
-            savedCurve={savedCurveOil}
-            onEdit={() => setIsNewCurveVisibleOil(!isNewCurveVisibleOil)}
-            isEditMode={isNewCurveVisibleOil}
-            fluidType="oil"
-          />
-        </div>
-        <div style={{ width: 'calc(25% - 5px)', flexShrink: 0 }}>
-          {isNewCurveVisibleOil && (
-            <CurveEditorPanel
-              wellProdSeries={wellProdSeries}
-              editableParams={editableParamsOil}
-              updateEditableParam={updateEditableParamOil}
-              removeEditableParam={removeEditableParamOil}
-              activeWell={activeWell}
-              onResetToSaved={handleResetToSavedOil}
-              savedCurve={savedCurveOil}
-              activeSegment={activeSegmentOil}
-              setActiveSegment={setActiveSegmentOil}
-              fluidType="oil"
-            />
-          )}
-        </div>
+        {isSingleWell && (
+          <>
+            <div style={{ width: 'calc(25% - 5px)', flexShrink: 0 }}>
+              <SavedCurvePanel
+                savedCurve={savedCurveOil}
+                onEdit={() => setIsNewCurveVisibleOil(!isNewCurveVisibleOil)}
+                isEditMode={isNewCurveVisibleOil}
+                fluidType="oil"
+              />
+            </div>
+            <div style={{ width: 'calc(25% - 5px)', flexShrink: 0 }}>
+              {isNewCurveVisibleOil && (
+                <CurveEditorPanel
+                  wellProdSeries={wellProdSeries}
+                  editableParams={editableParamsOil}
+                  updateEditableParam={updateEditableParamOil}
+                  removeEditableParam={removeEditableParamOil}
+                  activeWell={activeWell}
+                  onResetToSaved={handleResetToSavedOil}
+                  savedCurve={savedCurveOil}
+                  activeSegment={activeSegmentOil}
+                  setActiveSegment={setActiveSegmentOil}
+                  fluidType="oil"
+                />
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Row 2: Gas Graph + Panels */}
       <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', alignItems: 'flex-start', width: '100%' }}>
-        <div style={{ width: 'calc(50% - 10px)', flexShrink: 0, height: '40vh', minHeight: '300px' }}>
+        <div style={{ width: isSingleWell ? 'calc(50% - 10px)' : '100%', flexShrink: 0, height: '40vh', minHeight: '300px' }}>
           <GasChart
             series={series}
             points={pointsGas}
@@ -125,35 +131,39 @@ export default function PeakChartPanel({
             editableParams={editableParamsGas}
           />
         </div>
-        <div style={{ width: 'calc(25% - 5px)', flexShrink: 0 }}>
-          <SavedCurvePanel
-            savedCurve={savedCurveGas}
-            onEdit={() => setIsNewCurveVisibleGas(!isNewCurveVisibleGas)}
-            isEditMode={isNewCurveVisibleGas}
-            fluidType="gas"
-          />
-        </div>
-        <div style={{ width: 'calc(25% - 5px)', flexShrink: 0 }}>
-          {isNewCurveVisibleGas && (
-            <CurveEditorPanel
-              wellProdSeries={wellProdSeries}
-              editableParams={editableParamsGas}
-              updateEditableParam={updateEditableParamGas}
-              removeEditableParam={removeEditableParamGas}
-              activeWell={activeWell}
-              onResetToSaved={handleResetToSavedGas}
-              savedCurve={savedCurveGas}
-              activeSegment={activeSegmentGas}
-              setActiveSegment={setActiveSegmentGas}
-              fluidType="gas"
-            />
-          )}
-        </div>
+        {isSingleWell && (
+          <>
+            <div style={{ width: 'calc(25% - 5px)', flexShrink: 0 }}>
+              <SavedCurvePanel
+                savedCurve={savedCurveGas}
+                onEdit={() => setIsNewCurveVisibleGas(!isNewCurveVisibleGas)}
+                isEditMode={isNewCurveVisibleGas}
+                fluidType="gas"
+              />
+            </div>
+            <div style={{ width: 'calc(25% - 5px)', flexShrink: 0 }}>
+              {isNewCurveVisibleGas && (
+                <CurveEditorPanel
+                  wellProdSeries={wellProdSeries}
+                  editableParams={editableParamsGas}
+                  updateEditableParam={updateEditableParamGas}
+                  removeEditableParam={removeEditableParamGas}
+                  activeWell={activeWell}
+                  onResetToSaved={handleResetToSavedGas}
+                  savedCurve={savedCurveGas}
+                  activeSegment={activeSegmentGas}
+                  setActiveSegment={setActiveSegmentGas}
+                  fluidType="gas"
+                />
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Row 3: Water Graph + Panels */}
       <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', alignItems: 'flex-start', width: '100%' }}>
-        <div style={{ width: 'calc(50% - 10px)', flexShrink: 0, height: '40vh', minHeight: '300px' }}>
+        <div style={{ width: isSingleWell ? 'calc(50% - 10px)' : '100%', flexShrink: 0, height: '40vh', minHeight: '300px' }}>
           <WaterChart
             series={series}
             points={pointsWater}
@@ -163,30 +173,34 @@ export default function PeakChartPanel({
             editableParams={editableParamsWater}
           />
         </div>
-        <div style={{ width: 'calc(25% - 5px)', flexShrink: 0 }}>
-          <SavedCurvePanel
-            savedCurve={savedCurveWater}
-            onEdit={() => setIsNewCurveVisibleWater(!isNewCurveVisibleWater)}
-            isEditMode={isNewCurveVisibleWater}
-            fluidType="water"
-          />
-        </div>
-        <div style={{ width: 'calc(25% - 5px)', flexShrink: 0 }}>
-          {isNewCurveVisibleWater && (
-            <CurveEditorPanel
-              wellProdSeries={wellProdSeries}
-              editableParams={editableParamsWater}
-              updateEditableParam={updateEditableParamWater}
-              removeEditableParam={removeEditableParamWater}
-              activeWell={activeWell}
-              onResetToSaved={handleResetToSavedWater}
-              savedCurve={savedCurveWater}
-              activeSegment={activeSegmentWater}
-              setActiveSegment={setActiveSegmentWater}
-              fluidType="water"
-            />
-          )}
-        </div>
+        {isSingleWell && (
+          <>
+            <div style={{ width: 'calc(25% - 5px)', flexShrink: 0 }}>
+              <SavedCurvePanel
+                savedCurve={savedCurveWater}
+                onEdit={() => setIsNewCurveVisibleWater(!isNewCurveVisibleWater)}
+                isEditMode={isNewCurveVisibleWater}
+                fluidType="water"
+              />
+            </div>
+            <div style={{ width: 'calc(25% - 5px)', flexShrink: 0 }}>
+              {isNewCurveVisibleWater && (
+                <CurveEditorPanel
+                  wellProdSeries={wellProdSeries}
+                  editableParams={editableParamsWater}
+                  updateEditableParam={updateEditableParamWater}
+                  removeEditableParam={removeEditableParamWater}
+                  activeWell={activeWell}
+                  onResetToSaved={handleResetToSavedWater}
+                  savedCurve={savedCurveWater}
+                  activeSegment={activeSegmentWater}
+                  setActiveSegment={setActiveSegmentWater}
+                  fluidType="water"
+                />
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

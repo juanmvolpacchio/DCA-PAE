@@ -300,6 +300,8 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
         // Common props
         wellProdSeries={wellProdSeries}
         activeWell={activeWell}
+        // Multiple wells flag
+        isSingleWell={isSingleWell}
       />
     </Container>
   );

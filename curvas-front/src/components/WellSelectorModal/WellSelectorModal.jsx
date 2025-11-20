@@ -4,11 +4,20 @@ import "./WellSelectorModal.css";
 
 export default function WellSelectorModal({ show, onHide, wells, onConfirm, initialSelected = [] }) {
   const [selectedWells, setSelectedWells] = useState(initialSelected);
+  const [searchText, setSearchText] = useState("");
 
-  // Update selected wells when initialSelected changes
+  // Update selected wells when initialSelected changes or modal opens
   useEffect(() => {
-    setSelectedWells(initialSelected);
-  }, [initialSelected]);
+    if (show) {
+      setSelectedWells(initialSelected);
+      setSearchText("");
+    }
+  }, [initialSelected, show]);
+
+  // Filter wells based on search text
+  const filteredWells = wells.filter(well =>
+    well.name.toLowerCase().includes(searchText.toLowerCase())
+  );
 
   const handleToggleWell = (wellName) => {
     if (selectedWells.includes(wellName)) {
@@ -19,7 +28,7 @@ export default function WellSelectorModal({ show, onHide, wells, onConfirm, init
   };
 
   const handleSelectAll = () => {
-    setSelectedWells(wells.map((w) => w.name));
+    setSelectedWells(filteredWells.map((w) => w.name));
   };
 
   const handleDeselectAll = () => {
@@ -37,6 +46,13 @@ export default function WellSelectorModal({ show, onHide, wells, onConfirm, init
         <Modal.Title>Seleccionar pozos</Modal.Title>
       </Modal.Header>
       <Modal.Body className="d-flex flex-column">
+        <Form.Control
+          type="text"
+          placeholder="Buscar pozo..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          className="mb-3"
+        />
         <div className="d-flex justify-content-between mb-3">
           <Button variant="outline-primary" size="sm" onClick={handleSelectAll}>
             Seleccionar todos
@@ -46,7 +62,7 @@ export default function WellSelectorModal({ show, onHide, wells, onConfirm, init
           </Button>
         </div>
         <div className="wells-list">
-          {wells.map((well) => (
+          {filteredWells.map((well) => (
             <Form.Check
               key={well.name}
               type="checkbox"

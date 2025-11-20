@@ -23,6 +23,11 @@ const router = createHashRouter([
         element: <ProjectAnalysis />,
       },
       {
+        id: "projects-analysis",
+        path: "projects/:projectName",
+        element: <ProjectAnalysis />,
+      },
+      {
         id: "project-wells-all",
         path: "project/:projectName/wells",
         element: <WellScreen />,
@@ -30,6 +35,16 @@ const router = createHashRouter([
       {
         id: "project-wells-specific",
         path: "project/:projectName/wells/:wellNames",
+        element: <WellScreen />,
+      },
+      {
+        id: "projects-wells-all",
+        path: "projects/:projectName/wells",
+        element: <WellScreen />,
+      },
+      {
+        id: "projects-wells-specific",
+        path: "projects/:projectName/wells/:wellNames",
         element: <WellScreen />,
       },
     ],

@@ -1,0 +1,25 @@
+.project-selector-modal .projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  background-color: #f8f9fa;
+}
+
+.project-selector-modal .form-check {
+  margin: 0;
+  padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+  background-color: white;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+}
+
+.project-selector-modal .form-check:hover {
+  background-color: #e9ecef;
+}
+
+.project-selector-modal .form-check-input {
+  margin-left: 0 !important;
+}

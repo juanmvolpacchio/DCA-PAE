@@ -9,6 +9,7 @@ import { useWell } from "../../hooks/useWell";
 // import logo from '/src/assets/icon.png';
 import LoginButton from "../../components/LoginButton/LoginButton";
 import WellSelectorModal from "../../components/WellSelectorModal/WellSelectorModal";
+import ProjectSelectorModal from "../../components/ProjectSelectorModal/ProjectSelectorModal";
 import "./root.css";
 
 export default function MainScreen() {
@@ -18,9 +19,10 @@ export default function MainScreen() {
   const navigate = useNavigate();
 
   const [managUnit, setManagUnit] = useState("");
-  const [project, setProject] = useState(projectName || "");
+  const [selectedProjects, setSelectedProjects] = useState(projectName ? [projectName] : []);
   const [selectedWell, setSelectedWell] = useState(wellNames || "");
   const [showWellModal, setShowWellModal] = useState(false);
+  const [showProjectModal, setShowProjectModal] = useState(false);
 
   const { data: wellsData } = useQuery({
     queryKey: ["wells"],
@@ -35,8 +37,15 @@ export default function MainScreen() {
 
   // Sync project and well state with URL
   useEffect(() => {
-    if (projectName && projectName !== project) {
-      setProject(projectName);
+    if (projectName) {
+      // Handle multiple projects from URL (comma-separated)
+      const projectsFromUrl = projectName.split(',');
+      // Only update if the projects are different
+      const currentProjectsStr = selectedProjects.slice().sort().join(',');
+      const urlProjectsStr = projectsFromUrl.slice().sort().join(',');
+      if (currentProjectsStr !== urlProjectsStr) {
+        setSelectedProjects(projectsFromUrl);
+      }
     }
     if (wellNames && wellNames !== selectedWell) {
       setSelectedWell(wellNames);
@@ -63,15 +72,31 @@ export default function MainScreen() {
     .filter(
       (w) =>
         (managUnit === "" || w.manag_unit === managUnit) &&
-        (project === "" || w.proyecto === project)
+        (selectedProjects.length === 0 || selectedProjects.includes(w.proyecto))
     );
+
+  // Handle project selection from modal
+  const handleProjectSelectionConfirm = (projects) => {
+    setSelectedProjects(projects);
+    setSelectedWell("");
+    if (projects.length === 1) {
+      navigate(`/project/${projects[0]}`);
+    } else if (projects.length > 1) {
+      // Navigate to multi-project view
+      navigate(`/projects/${projects.join(',')}`);
+    }
+  };
 
   // Handle well selection from modal
   const handleWellSelectionConfirm = (selectedWells) => {
-    if (selectedWells.length > 0 && project) {
+    if (selectedWells.length > 0 && selectedProjects.length > 0) {
       const wellsParam = selectedWells.join(',');
       setSelectedWell(wellsParam);
-      navigate(`/project/${project}/wells/${wellsParam}`);
+      if (selectedProjects.length === 1) {
+        navigate(`/project/${selectedProjects[0]}/wells/${wellsParam}`);
+      } else {
+        navigate(`/projects/${selectedProjects.join(',')}/wells/${wellsParam}`);
+      }
     }
   };
 
@@ -85,6 +110,17 @@ export default function MainScreen() {
       return selectedWell;
     }
     return `${wellCount} pozos seleccionados`;
+  };
+
+  // Get button text for projects
+  const getProjectButtonText = () => {
+    if (selectedProjects.length === 0) {
+      return "Seleccionar proyectos";
+    }
+    if (selectedProjects.length === 1) {
+      return selectedProjects[0];
+    }
+    return `${selectedProjects.length} proyectos seleccionados`;
   };
 
   // Get unique management units
@@ -109,7 +145,7 @@ export default function MainScreen() {
               value={managUnit}
               onChange={(e) => {
                 setManagUnit(e.target.value);
-                setProject("");
+                setSelectedProjects([]);
                 setSelectedWell("");
               }}
               style={{ maxWidth: '250px' }}
@@ -122,30 +158,18 @@ export default function MainScreen() {
               ))}
             </Form.Select>
 
-            <Form.Select
-              value={project}
-              onChange={(e) => {
-                const selectedProject = e.target.value;
-                setProject(selectedProject);
-                setSelectedWell("");
-                if (selectedProject) {
-                  navigate(`/project/${selectedProject}`);
-                }
-              }}
-              style={{ maxWidth: '250px' }}
+            <Button
+              variant="outline-primary"
+              onClick={() => setShowProjectModal(true)}
+              style={{ minWidth: '200px' }}
             >
-              <option value="">Todos los proyectos</option>
-              {projects.map((proj) => (
-                <option key={proj} value={proj}>
-                  {proj}
-                </option>
-              ))}
-            </Form.Select>
+              {getProjectButtonText()}
+            </Button>
 
             <Button
               variant="outline-primary"
               onClick={() => setShowWellModal(true)}
-              disabled={!project}
+              disabled={selectedProjects.length === 0}
               style={{ minWidth: '200px' }}
             >
               {getWellButtonText()}
@@ -157,6 +181,14 @@ export default function MainScreen() {
       <Container fluid className="h-100 p-0">
         <Outlet context={{ user, activeWell }} />
       </Container>
+
+      <ProjectSelectorModal
+        show={showProjectModal}
+        onHide={() => setShowProjectModal(false)}
+        projects={projects}
+        onConfirm={handleProjectSelectionConfirm}
+        initialSelected={selectedProjects}
+      />
 
       <WellSelectorModal
         show={showWellModal}

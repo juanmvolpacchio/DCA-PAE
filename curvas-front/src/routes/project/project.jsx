@@ -8,6 +8,9 @@ import * as XLSX from "xlsx";
 export default function ProjectAnalysis() {
   const { projectName } = useParams();
 
+  // Support multiple projects from URL (e.g., /projects/proj1,proj2,proj3)
+  const projectNames = projectName ? projectName.split(',') : [];
+
   const [fluidType, setFluidType] = useState("oil");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
@@ -15,22 +18,44 @@ export default function ProjectAnalysis() {
   const [sortBy, setSortBy] = useState("deltaPercent");
   const [sortOrder, setSortOrder] = useState("desc");
 
-  // Fetch project analysis data
+  // Fetch project analysis data for multiple projects
   const { data, isLoading, error } = useQuery({
-    queryKey: ["projectAnalysis", projectName, fechaDesde, fechaHasta, fluidType],
+    queryKey: ["projectAnalysis", projectNames, fechaDesde, fechaHasta, fluidType],
     queryFn: async () => {
       const params = new URLSearchParams({
         fechaDesde,
         fechaHasta,
         fluidType,
       });
-      const response = await fetch(
-        `${API_BASE}/projects/${encodeURIComponent(projectName)}/analysis?${params}`
-      );
-      if (!response.ok) throw new Error("Failed to load project analysis");
-      return response.json();
+
+      // Fetch data for all projects in parallel
+      const promises = projectNames.map(async (projName) => {
+        const response = await fetch(
+          `${API_BASE}/projects/${encodeURIComponent(projName)}/analysis?${params}`
+        );
+        if (!response.ok) throw new Error(`Failed to load analysis for ${projName}`);
+        const json = await response.json();
+        // Add project name to each well
+        return {
+          ...json,
+          wells: json.wells.map(well => ({ ...well, project: projName }))
+        };
+      });
+
+      const results = await Promise.all(promises);
+
+      // Combine all wells from all projects
+      const allWells = results.flatMap(result => result.wells);
+
+      return {
+        projectNames,
+        fluidType,
+        fechaDesde,
+        fechaHasta,
+        wells: allWells
+      };
     },
-    enabled: !!fechaDesde && !!fechaHasta,
+    enabled: !!fechaDesde && !!fechaHasta && projectNames.length > 0,
   });
 
   // Initialize dates with current month
@@ -105,10 +130,12 @@ export default function ProjectAnalysis() {
 
   // Calculate delta percent for each well and add to data
   const wellsWithDeltaPercent = data?.wells?.map(well => {
-    const deltaPercent = well.volumeProduced !== 0
+    // Check if we have valid data (both produced and extrapolated must be > 0)
+    const hasValidData = well.volumeProduced > 0 && well.volumeExtrapolated > 0;
+    const deltaPercent = hasValidData
       ? Math.abs((well.volumeExtrapolated - well.volumeProduced) / well.volumeProduced * 100)
-      : 0;
-    return { ...well, deltaPercent };
+      : null;
+    return { ...well, deltaPercent, hasValidData };
   }) || [];
 
   // Sort wells
@@ -116,6 +143,10 @@ export default function ProjectAnalysis() {
     let aValue, bValue;
 
     switch (sortBy) {
+      case "project":
+        aValue = a.project || "";
+        bValue = b.project || "";
+        break;
       case "well":
         aValue = a.well;
         bValue = b.well;
@@ -133,14 +164,14 @@ export default function ProjectAnalysis() {
         bValue = b.delta;
         break;
       case "deltaPercent":
-        aValue = a.deltaPercent;
-        bValue = b.deltaPercent;
+        aValue = a.deltaPercent !== null ? a.deltaPercent : -1;
+        bValue = b.deltaPercent !== null ? b.deltaPercent : -1;
         break;
       default:
         return 0;
     }
 
-    if (sortBy === "well") {
+    if (sortBy === "project" || sortBy === "well") {
       // String comparison
       return sortOrder === "asc"
         ? aValue.localeCompare(bValue)
@@ -195,27 +226,45 @@ export default function ProjectAnalysis() {
     };
 
     const worksheetData = [
-      [`Análisis de Proyecto: ${projectName}`],
+      [`Análisis de Proyecto${projectNames.length > 1 ? 's' : ''}: ${projectNames.join(', ')}`],
       [`Recurso: ${fluidLabels[fluidType]}`],
       [`Período: ${fechaDesde} a ${fechaHasta}`],
       [],
-      ["Pozo", "Volumen Producido", "Volumen Potencial", "Delta", "Delta %"],
-      ...sortedWells.map((well) => [
-        well.well,
-        well.volumeProduced,
-        well.volumeExtrapolated,
-        well.delta,
-        well.deltaPercent.toFixed(2),
-      ]),
+      projectNames.length > 1
+        ? ["Proyecto", "Pozo", "Volumen Producido", "Volumen Potencial", "Delta", "Delta %"]
+        : ["Pozo", "Volumen Producido", "Volumen Potencial", "Delta", "Delta %"],
+      ...sortedWells.map((well) =>
+        projectNames.length > 1
+          ? [
+              well.project,
+              well.well,
+              well.volumeProduced,
+              well.volumeExtrapolated,
+              well.hasValidData ? well.delta : "-",
+              well.hasValidData ? well.deltaPercent.toFixed(2) : "-",
+            ]
+          : [
+              well.well,
+              well.volumeProduced,
+              well.volumeExtrapolated,
+              well.hasValidData ? well.delta : "-",
+              well.hasValidData ? well.deltaPercent.toFixed(2) : "-",
+            ]
+      ),
       [],
-      ["TOTAL", totals.volumeProduced, totals.volumeExtrapolated, totals.delta, totalDeltaPercent.toFixed(2)],
+      projectNames.length > 1
+        ? ["", "TOTAL", totals.volumeProduced, totals.volumeExtrapolated, totals.delta, totalDeltaPercent.toFixed(2)]
+        : ["TOTAL", totals.volumeProduced, totals.volumeExtrapolated, totals.delta, totalDeltaPercent.toFixed(2)],
     ];
 
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Análisis");
 
-    XLSX.writeFile(workbook, `${projectName}_analisis_${fluidType}.xlsx`);
+    const fileName = projectNames.length > 1
+      ? `proyectos_multiples_analisis_${fluidType}.xlsx`
+      : `${projectNames[0]}_analisis_${fluidType}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
   };
 
   const fluidLabels = {
@@ -236,7 +285,9 @@ export default function ProjectAnalysis() {
     <Container fluid className="p-4">
       <Row className="mb-4">
         <Col>
-          <h2>Análisis de Proyecto: {projectName}</h2>
+          <h2>
+            Análisis de Proyecto{projectNames.length > 1 ? 's' : ''}: {projectNames.join(', ')}
+          </h2>
         </Col>
       </Row>
 
@@ -308,6 +359,22 @@ export default function ProjectAnalysis() {
           <Table striped bordered hover responsive>
             <thead>
               <tr>
+                {projectNames.length > 1 && (
+                  <th>
+                    <div className="d-flex align-items-center justify-content-between">
+                      <span>Proyecto</span>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="p-0 ms-2"
+                        onClick={() => handleSort("project")}
+                        title="Ordenar por Proyecto"
+                      >
+                        {getSortIcon("project")}
+                      </Button>
+                    </div>
+                  </th>
+                )}
                 <th>
                   <div className="d-flex align-items-center justify-content-between">
                     <span>Pozo</span>
@@ -382,6 +449,7 @@ export default function ProjectAnalysis() {
             </thead>
             <tbody>
               <tr className="table-secondary fw-bold">
+                {projectNames.length > 1 && <td></td>}
                 <td>TOTAL</td>
                 <td className="text-end">
                   {totals.volumeProduced.toLocaleString("es-AR", {
@@ -413,14 +481,17 @@ export default function ProjectAnalysis() {
                 </td>
               </tr>
               {sortedWells.map((well) => (
-                <tr key={well.well}>
+                <tr key={`${well.project}-${well.well}`}>
+                  {projectNames.length > 1 && (
+                    <td>{well.project}</td>
+                  )}
                   <td>
                     <div className="d-flex align-items-center gap-2">
                       <span>{well.well}</span>
                       <Button
                         variant="outline-primary"
                         size="sm"
-                        onClick={() => window.open(`#/project/${projectName}/wells/${well.well}`, '_blank')}
+                        onClick={() => window.open(`#/project/${well.project}/wells/${well.well}`, '_blank')}
                         title="Ver detalles del pozo"
                       >
                         👁️
@@ -441,23 +512,28 @@ export default function ProjectAnalysis() {
                   </td>
                   <td
                     className={`text-end ${
-                      well.delta > 0 ? "text-danger" : well.delta < 0 ? "text-success" : ""
+                      well.hasValidData && well.delta > 0 ? "text-danger" : well.hasValidData && well.delta < 0 ? "text-success" : ""
                     }`}
                   >
-                    {well.delta.toLocaleString("es-AR", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    {well.hasValidData
+                      ? well.delta.toLocaleString("es-AR", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      : "-"}
                   </td>
                   <td className="text-end">
-                    {well.deltaPercent.toLocaleString("es-AR", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}%
+                    {well.hasValidData
+                      ? `${well.deltaPercent.toLocaleString("es-AR", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}%`
+                      : "-"}
                   </td>
                 </tr>
               ))}
               <tr className="table-secondary fw-bold">
+                {projectNames.length > 1 && <td></td>}
                 <td>TOTAL</td>
                 <td className="text-end">
                   {totals.volumeProduced.toLocaleString("es-AR", {

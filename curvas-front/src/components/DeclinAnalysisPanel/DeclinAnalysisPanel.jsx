@@ -18,8 +18,14 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
   const { wellNames } = useParams();
   const { well: activeWell } = useWell();
 
-  // Only fetch saved curves for single well
+  // Check if single or multiple wells
   const isSingleWell = wellNames && !wellNames.includes(',');
+  const wellNamesArray = wellNames ? wellNames.split(',') : [];
+
+  // State for extrapolation months (for multiple wells)
+  const [mesesExtrapolacion, setMesesExtrapolacion] = useState(12);
+
+  // Fetch saved curves for single well
   const { data: wellSavedCurves, isLoading: isLoadingCurves } = useQuery({
     queryKey: ["well", wellNames, "curves"],
     queryFn: async () => {
@@ -31,6 +37,29 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
       return json.curves;
     },
     enabled: isSingleWell,
+    staleTime: 60_000,
+  });
+
+  // Fetch saved curves for all wells when multiple wells selected
+  const { data: allWellsCurves, isLoading: isLoadingAllCurves } = useQuery({
+    queryKey: ["wells", wellNamesArray, "curves"],
+    queryFn: async () => {
+      const promises = wellNamesArray.map(async (wellName) => {
+        try {
+          const res = await fetch(
+            `${API_BASE}/wells/${encodeURIComponent(wellName)}/curves`
+          );
+          if (!res.ok) return { wellName, curves: [] };
+          const json = await res.json();
+          return { wellName, curves: json.curves };
+        } catch (error) {
+          console.error(`Error fetching curves for ${wellName}:`, error);
+          return { wellName, curves: [] };
+        }
+      });
+      return await Promise.all(promises);
+    },
+    enabled: !isSingleWell && wellNamesArray.length > 1,
     staleTime: 60_000,
   });
 
@@ -230,6 +259,97 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
     Object.keys(editableParamsWater)[0]
   );
 
+  // Calculate extrapolated series for multiple wells
+  const calculateMultiWellExtrapolation = () => {
+    if (isSingleWell || !allWellsCurves || allWellsCurves.length === 0) {
+      return null;
+    }
+
+    // Calculate extrapolated values for each fluid type
+    const extrapolatedOil = [];
+    const extrapolatedGas = [];
+    const extrapolatedWater = [];
+    const extrapolatedMonths = [];
+
+    // Get the last production month
+    const lastMonth = wellProdSeries.month[wellProdSeries.month.length - 1];
+    const lastMonthDate = new Date(lastMonth);
+
+    // For each future month of extrapolation
+    for (let monthIndex = 0; monthIndex < mesesExtrapolacion; monthIndex++) {
+      let totalOil = 0;
+      let totalGas = 0;
+      let totalWater = 0;
+
+      // Sum contributions from all wells' saved curves
+      allWellsCurves.forEach(({ wellName, curves }) => {
+        // Get most recent curve for each fluid type
+        const oilCurve = curves.find(c => c.fluid_type === 'oil');
+        const gasCurve = curves.find(c => c.fluid_type === 'gas');
+        const waterCurve = curves.find(c => c.fluid_type === 'water');
+
+        // For oil curve - calculate from current position, not from month 0
+        if (oilCurve && oilCurve.start_date) {
+          const qo = Number(oilCurve.qo);
+          const dea = Number(oilCurve.dea);
+
+          // Calculate how many months have passed since curve started
+          const startDate = new Date(oilCurve.start_date);
+          const monthsSinceStart = (lastMonthDate.getFullYear() - startDate.getFullYear()) * 12
+                                 + (lastMonthDate.getMonth() - startDate.getMonth());
+
+          // Calculate value for this extrapolation month from current position
+          const n = monthsSinceStart + monthIndex;
+          totalOil += qo * Math.E ** (-dea * n);
+        }
+
+        // For gas curve
+        if (gasCurve && gasCurve.start_date) {
+          const qo = Number(gasCurve.qo);
+          const dea = Number(gasCurve.dea);
+
+          const startDate = new Date(gasCurve.start_date);
+          const monthsSinceStart = (lastMonthDate.getFullYear() - startDate.getFullYear()) * 12
+                                 + (lastMonthDate.getMonth() - startDate.getMonth());
+
+          const n = monthsSinceStart + monthIndex;
+          totalGas += qo * Math.E ** (-dea * n);
+        }
+
+        // For water curve
+        if (waterCurve && waterCurve.start_date) {
+          const qo = Number(waterCurve.qo);
+          const dea = Number(waterCurve.dea);
+
+          const startDate = new Date(waterCurve.start_date);
+          const monthsSinceStart = (lastMonthDate.getFullYear() - startDate.getFullYear()) * 12
+                                 + (lastMonthDate.getMonth() - startDate.getMonth());
+
+          const n = monthsSinceStart + monthIndex;
+          totalWater += qo * Math.E ** (-dea * n);
+        }
+      });
+
+      extrapolatedOil.push(totalOil);
+      extrapolatedGas.push(totalGas);
+      extrapolatedWater.push(totalWater);
+
+      // Calculate the month date
+      const extrapDate = new Date(lastMonthDate);
+      extrapDate.setMonth(extrapDate.getMonth() + monthIndex + 1);
+      extrapolatedMonths.push(extrapDate.toISOString());
+    }
+
+    return {
+      oil: extrapolatedOil,
+      gas: extrapolatedGas,
+      water: extrapolatedWater,
+      months: extrapolatedMonths,
+    };
+  };
+
+  const multiWellExtrapolation = calculateMultiWellExtrapolation();
+
   // Only show loading for single wells waiting for saved curves
   if (isSingleWell && isLoadingCurves) {
     return "Loading...";
@@ -248,7 +368,26 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
   return (
     <Container fluid className="h-100 py-3">
       {wellNames && (
-        <h4 className="mb-3">{getDisplayTitle()}</h4>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h4 className="mb-0">{getDisplayTitle()}</h4>
+          {!isSingleWell && (
+            <div className="d-flex align-items-center gap-2">
+              <label htmlFor="meses-extrapolacion" style={{ whiteSpace: 'nowrap' }}>
+                Meses Extrapolación:
+              </label>
+              <input
+                id="meses-extrapolacion"
+                type="number"
+                min="1"
+                max="120"
+                value={mesesExtrapolacion}
+                onChange={(e) => setMesesExtrapolacion(Math.max(1, parseInt(e.target.value) || 1))}
+                style={{ width: '80px' }}
+                className="form-control form-control-sm"
+              />
+            </div>
+          )}
+        </div>
       )}
       <PeakChartPanel
         series={{
@@ -302,6 +441,9 @@ export default function DeclinAnalysisPanel({ wellProdSeries }) {
         activeWell={activeWell}
         // Multiple wells flag
         isSingleWell={isSingleWell}
+        // Multi-well extrapolation
+        multiWellExtrapolation={multiWellExtrapolation}
+        mesesExtrapolacion={mesesExtrapolacion}
       />
     </Container>
   );

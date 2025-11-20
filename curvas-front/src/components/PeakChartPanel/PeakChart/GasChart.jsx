@@ -46,7 +46,7 @@ const getLayoutXAxis = (series, zoomRanges, extrapolationMonths) => {
   };
 };
 
-export default function GasChart({ series, points, addNewPoint, savedCurve, showNewCurve, editableParams }) {
+export default function GasChart({ series, points, addNewPoint, savedCurve, showNewCurve, editableParams, isSingleWell, multiWellExtrapolation, mesesExtrapolacion }) {
   const [logScale, setLogScale] = useState(false);
 
   // Calculate EUR (Estimated Ultimate Recovery) - total gas produced
@@ -66,7 +66,10 @@ export default function GasChart({ series, points, addNewPoint, savedCurve, show
   };
 
   // Get extrapolation parameters
-  const extrapolationMonths = Math.max(editableParams?.["Seg. 1"]?.t || 12, 0);
+  // For single well: use editableParams, for multiple wells: use mesesExtrapolacion
+  const extrapolationMonths = isSingleWell
+    ? Math.max(editableParams?.["Seg. 1"]?.t || 12, 0)
+    : (mesesExtrapolacion || 12);
 
   // Calculate the max range including extrapolation
   const maxXRange = series.gas.length + extrapolationMonths;
@@ -135,11 +138,14 @@ export default function GasChart({ series, points, addNewPoint, savedCurve, show
         if (startIndex === -1) return null;
 
         const totalMonths = series.months.length - startIndex + extrapolationMonths;
-        const savedCurveExtrapolated = calculateExtrapolatedGas(
-          Number(savedCurve.qo),
-          Number(savedCurve.dea),
-          extrapolationMonths
-        );
+
+        // Calculate extrapolated potential from current position, not from month 0
+        const monthsSinceStart = series.months.length - startIndex;
+        let savedCurveExtrapolated = 0;
+        for (let n = monthsSinceStart; n < monthsSinceStart + extrapolationMonths; n++) {
+          savedCurveExtrapolated += Number(savedCurve.qo) * Math.E ** (-Number(savedCurve.dea) * n);
+        }
+
         const r2Display = savedCurveR2 !== null ? `, R²: ${savedCurveR2.toFixed(4)}` : '';
 
         return {
@@ -158,7 +164,7 @@ export default function GasChart({ series, points, addNewPoint, savedCurve, show
           hoverlabel: {
             font: { size: 10 },
           },
-          name: `Curva Guardada (Potencial: ${savedCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³${r2Display})`,
+          name: `Curva Guardada (Potencial: ${savedCurveExtrapolated.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m³${r2Display})`,
           visible: true,
           showlegend: true,
         };
@@ -177,11 +183,14 @@ export default function GasChart({ series, points, addNewPoint, savedCurve, show
         if (startIndex === -1) return null;
 
         const totalMonths = series.months.length - startIndex + extrapolationMonths;
-        const newCurveExtrapolated = calculateExtrapolatedGas(
-          editableParams["Seg. 1"].qo,
-          editableParams["Seg. 1"].dea,
-          extrapolationMonths
-        );
+
+        // Calculate extrapolated potential from current position, not from month 0
+        const monthsSinceStart = series.months.length - startIndex;
+        let newCurveExtrapolated = 0;
+        for (let n = monthsSinceStart; n < monthsSinceStart + extrapolationMonths; n++) {
+          newCurveExtrapolated += editableParams["Seg. 1"].qo * Math.E ** (-editableParams["Seg. 1"].dea * n);
+        }
+
         const r2Display = editableParams["Seg. 1"].r2 !== undefined ? `, R²: ${editableParams["Seg. 1"].r2.toFixed(4)}` : '';
 
         return {
@@ -200,17 +209,43 @@ export default function GasChart({ series, points, addNewPoint, savedCurve, show
           hoverlabel: {
             font: { size: 10 },
           },
-          name: `Nueva Curva (Potencial: ${newCurveExtrapolated.toLocaleString('es-ES', { maximumFractionDigits: 0 })} m³${r2Display})`,
+          name: `Nueva Curva (Potencial: ${newCurveExtrapolated.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m³${r2Display})`,
           visible: true,
           showlegend: true,
         };
       })()
     : null;
 
+  // Generate multi-well extrapolation curve (purple curve) - only for multiple wells
+  const multiWellExtrapolationData = !isSingleWell && multiWellExtrapolation && multiWellExtrapolation.gas
+    ? {
+        x: Array.from(
+          { length: multiWellExtrapolation.gas.length },
+          (_, n) => series.gas.length + n + 1
+        ),
+        y: multiWellExtrapolation.gas,
+        type: "scatter",
+        mode: "lines",
+        line: {
+          width: 3,
+          color: "#9B59B6",
+          dash: "dash",
+        },
+        hovertemplate: "Extrapolación<br>Mes %{x}: %{y:.2f}m³<extra></extra>",
+        hoverlabel: {
+          font: { size: 10 },
+        },
+        name: `Extrapolación (${multiWellExtrapolation.gas.reduce((a, b) => a + b, 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m³)`,
+        visible: true,
+        showlegend: true,
+      }
+    : null;
+
   // Prepare data array and filter out null values
   const plotData = [
     savedCurveData,
     newCurveData,
+    multiWellExtrapolationData,
     {
       x: Array.from(new Array(series.gas.length), (x, n) => n + 1),
       y: series.gas,

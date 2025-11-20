@@ -54,6 +54,9 @@ export default function PeakChartPanel({
   activeWell,
   // Multiple wells flag
   isSingleWell,
+  // Multi-well extrapolation
+  multiWellExtrapolation,
+  mesesExtrapolacion,
 }) {
   const chartParams = {
     minHeight: "Altura",
@@ -87,6 +90,9 @@ export default function PeakChartPanel({
             savedCurve={savedCurveOil}
             showNewCurve={isNewCurveVisibleOil}
             editableParams={editableParamsOil}
+            isSingleWell={isSingleWell}
+            multiWellExtrapolation={multiWellExtrapolation}
+            mesesExtrapolacion={mesesExtrapolacion}
           />
         </div>
         {isSingleWell && (
@@ -129,6 +135,9 @@ export default function PeakChartPanel({
             savedCurve={savedCurveGas}
             showNewCurve={isNewCurveVisibleGas}
             editableParams={editableParamsGas}
+            isSingleWell={isSingleWell}
+            multiWellExtrapolation={multiWellExtrapolation}
+            mesesExtrapolacion={mesesExtrapolacion}
           />
         </div>
         {isSingleWell && (
@@ -171,6 +180,9 @@ export default function PeakChartPanel({
             savedCurve={savedCurveWater}
             showNewCurve={isNewCurveVisibleWater}
             editableParams={editableParamsWater}
+            isSingleWell={isSingleWell}
+            multiWellExtrapolation={multiWellExtrapolation}
+            mesesExtrapolacion={mesesExtrapolacion}
           />
         </div>
         {isSingleWell && (
